@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { getProject, triggerScan } from '../services/api';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { getProject, triggerScan, deleteProject } from '../services/api';
 import type { Project, Finding } from '../types';
-import { ArrowLeft, Play, ChevronDown, ChevronRight, ExternalLink, Shield, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Play, ChevronDown, ChevronRight, ExternalLink, Shield, AlertTriangle, Trash2 } from 'lucide-react';
 import { StatusBadge } from '../components/StatusBadge';
 import { format } from 'date-fns';
 
@@ -92,9 +92,11 @@ const FindingCard: React.FC<FindingCardProps> = ({ finding }) => {
 
 export const ProjectDetails: React.FC = () => {
     const { id } = useParams<{ id: string }>();
+    const navigate = useNavigate();
     const [project, setProject] = useState<Project | null>(null);
     const [loading, setLoading] = useState(true);
     const [scanning, setScanning] = useState(false);
+    const [deleting, setDeleting] = useState(false);
     const [severityFilter, setSeverityFilter] = useState<string>('ALL');
 
     const fetchProject = async () => {
@@ -132,6 +134,21 @@ export const ProjectDetails: React.FC = () => {
         }
     };
 
+    const handleDelete = async () => {
+        if (!project) return;
+        if (!window.confirm('Are you sure you want to delete this project? This action cannot be undone.')) return;
+
+        setDeleting(true);
+        try {
+            await deleteProject(project.id);
+            navigate('/');
+        } catch (error) {
+            console.error('Failed to delete project', error);
+            alert('Failed to delete project');
+            setDeleting(false);
+        }
+    };
+
     if (loading) return <div className="p-12 text-center">Loading...</div>;
     if (!project) return <div className="p-12 text-center">Project not found</div>;
 
@@ -165,12 +182,21 @@ export const ProjectDetails: React.FC = () => {
                     <Play className="w-4 h-4 mr-2" />
                     {scanning ? 'Starting...' : 'Start Scan'}
                 </button>
+                <button
+                    onClick={handleDelete}
+                    disabled={deleting || scanning}
+                    className="ml-3 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 disabled:opacity-50"
+                >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    {deleting ? 'Deleting...' : 'Delete'}
+                </button>
             </div>
 
             {/* Main Content Grid */}
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                 {/* Left Col: Stats & Info */}
                 <div className="space-y-6 lg:col-span-1">
+                    {/* Project Details Card */}
                     <div className="bg-white shadow overflow-hidden sm:rounded-lg">
                         <div className="px-4 py-5 sm:px-6">
                             <h3 className="text-lg leading-6 font-medium text-gray-900">Project Details</h3>
@@ -210,6 +236,43 @@ export const ProjectDetails: React.FC = () => {
                         </div>
                     </div>
 
+                    {/* Scheduling Card */}
+                    <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+                        <div className="px-4 py-5 sm:px-6">
+                            <h3 className="text-lg leading-6 font-medium text-gray-900">Scan Schedule</h3>
+                            <p className="mt-1 max-w-2xl text-sm text-gray-500">Automate your vulnerability scans.</p>
+                        </div>
+                        <div className="border-t border-gray-200 px-4 py-5 sm:p-6">
+                            <div className="flex items-center justify-between">
+                                <label htmlFor="frequency" className="block text-sm font-medium text-gray-700">Frequency</label>
+                                <select
+                                    id="frequency"
+                                    value={project.scanFrequency || 'MANUAL'}
+                                    onChange={async (e) => {
+                                        const newFreq = e.target.value as any;
+                                        try {
+                                            await import('../services/api').then(m => m.updateProject(project.id, { scanFrequency: newFreq }));
+                                            await fetchProject();
+                                        } catch (err) {
+                                            console.error(err);
+                                            alert('Failed to update schedule');
+                                        }
+                                    }}
+                                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                                >
+                                    <option value="MANUAL">Manual Only</option>
+                                    <option value="DAILY">Daily</option>
+                                    <option value="WEEKLY">Weekly</option>
+                                </select>
+                            </div>
+                            {project.nextScanAt && project.scanFrequency !== 'MANUAL' && (
+                                <p className="mt-4 text-sm text-gray-500">
+                                    Next scan: <span className="font-medium text-gray-900">{format(new Date(project.nextScanAt), 'PP p')}</span>
+                                </p>
+                            )}
+                        </div>
+                    </div>
+
                     {/* Severity Summary */}
                     {latestScan?.findings && latestScan.findings.length > 0 && (
                         <div className="bg-white shadow overflow-hidden sm:rounded-lg">
@@ -222,9 +285,8 @@ export const ProjectDetails: React.FC = () => {
                                         <button
                                             key={sev}
                                             onClick={() => setSeverityFilter(severityFilter === sev ? 'ALL' : sev)}
-                                            className={`w-full flex items-center justify-between p-2 rounded transition-colors ${
-                                                severityFilter === sev ? 'bg-indigo-100 ring-2 ring-indigo-500' : 'hover:bg-gray-50'
-                                            }`}
+                                            className={`w-full flex items-center justify-between p-2 rounded transition-colors ${severityFilter === sev ? 'bg-indigo-100 ring-2 ring-indigo-500' : 'hover:bg-gray-50'
+                                                }`}
                                         >
                                             <StatusBadge status={sev} type="severity" />
                                             <span className="text-sm font-medium text-gray-700">{severityCounts[sev]}</span>
@@ -272,7 +334,7 @@ export const ProjectDetails: React.FC = () => {
                         </ul>
                     </div>
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 };

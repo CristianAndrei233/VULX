@@ -1,11 +1,11 @@
 import { Router, Request, Response } from 'express';
 import Stripe from 'stripe';
-import { prisma } from '../lib/prisma';
+import prisma from '../lib/prisma';
 
 const router = Router();
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2024-11-20.acacia',
+  apiVersion: '2024-11-20.acacia' as any,
 });
 
 // Get available plans
@@ -25,7 +25,7 @@ router.get('/plans', async (req: Request, res: Response) => {
 // Get user's current subscription
 router.get('/subscription/:userId', async (req: Request, res: Response) => {
   try {
-    const { userId } = req.params;
+    const { userId } = req.params as { userId: string };
 
     const subscription = await prisma.subscription.findUnique({
       where: { userId },
@@ -286,7 +286,7 @@ router.post('/webhook', async (req: Request, res: Response) => {
 // Get usage stats for current billing period
 router.get('/usage/:userId', async (req: Request, res: Response) => {
   try {
-    const { userId } = req.params;
+    const { userId } = req.params as { userId: string };
 
     const user = await prisma.user.findUnique({
       where: { id: userId },

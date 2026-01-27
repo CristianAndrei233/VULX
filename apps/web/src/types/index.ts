@@ -5,6 +5,7 @@ export interface User {
   stripeCustomerId?: string;
   onboardingCompleted: boolean;
   organizationId?: string;
+  role: 'ADMIN' | 'USER';
   createdAt: string;
   updatedAt: string;
 }
@@ -50,6 +51,8 @@ export interface Project {
   createdAt: string;
   updatedAt: string;
   scans?: Scan[];
+  scanFrequency?: 'MANUAL' | 'DAILY' | 'WEEKLY';
+  nextScanAt?: string;
 }
 
 export interface Scan {

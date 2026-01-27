@@ -1,0 +1,49 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Organization {
+  id        String    @id @default(uuid())
+  name      String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  projects  Project[]
+}
+
+model Project {
+  id             String       @id @default(uuid())
+  name           String
+  specUrl        String?
+  specContent    String?      @db.Text
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  scans          Scan[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model Scan {
+  id          String    @id @default(uuid())
+  projectId   String
+  project     Project   @relation(fields: [projectId], references: [id])
+  status      String    @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+  findings    Finding[]
+}
+
+model Finding {
+  id          String   @id @default(uuid())
+  scanId      String
+  scan        Scan     @relation(fields: [scanId], references: [id])
+  type        String   // e.g., BOLA, AUTH_MISSING
+  severity    String   // CRITICAL, HIGH, MEDIUM, LOW, INFO
+  description String
+  endpoint    String
+  method      String
+  createdAt   DateTime @default(now())
+}

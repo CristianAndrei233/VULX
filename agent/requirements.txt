@@ -1,0 +1,35 @@
+# VULX Scanner Agent Dependencies
+
+# HTTP client
+aiohttp>=3.9.0
+httpx>=0.25.0
+
+# CLI
+click>=8.1.0
+rich>=13.0.0
+
+# YAML/JSON handling
+pyyaml>=6.0
+orjson>=3.9.0
+
+# OpenAPI parsing
+prance>=23.0.0
+openapi-spec-validator>=0.6.0
+
+# Async utilities
+asyncio-throttle>=1.0.0
+
+# Reporting
+jinja2>=3.1.0
+
+# Environment
+python-dotenv>=1.0.0
+
+# Retry logic
+tenacity>=8.2.0
+
+# Logging
+structlog>=23.0.0
+
+# Schemathesis (API fuzzing)
+schemathesis>=3.21.0

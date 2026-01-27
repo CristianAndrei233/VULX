@@ -83,13 +83,17 @@ model Scan {
 }
 
 model Finding {
-  id          String   @id @default(uuid())
-  scanId      String
-  scan        Scan     @relation(fields: [scanId], references: [id])
-  type        String   // e.g., BOLA, AUTH_MISSING
-  severity    String   // CRITICAL, HIGH, MEDIUM, LOW, INFO
-  description String
-  endpoint    String
-  method      String
-  createdAt   DateTime @default(now())
+  id            String   @id @default(uuid())
+  scanId        String
+  scan          Scan     @relation(fields: [scanId], references: [id])
+  type          String   // e.g., BOLA, AUTH_MISSING, SSRF_RISK
+  severity      String   // CRITICAL, HIGH, MEDIUM, LOW, INFO
+  description   String   @db.Text
+  endpoint      String
+  method        String
+  remediation   String?  @db.Text  // Actionable fix guidance with code examples
+  owaspCategory String?  // e.g., "API1:2023 - Broken Object Level Authorization"
+  cweId         String?  // e.g., "CWE-639"
+  evidence      String?  @db.Text  // Additional evidence or context
+  createdAt     DateTime @default(now())
 }

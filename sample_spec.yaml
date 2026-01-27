@@ -1,17 +1,530 @@
-openapi: 3.0.0
+openapi: 3.0.3
 info:
-  title: Sample API
+  title: Sample API with Security Issues
+  description: |
+    This sample API specification contains intentional security issues
+    for testing the VULX SecureAPI Scanner. Each endpoint demonstrates
+    different OWASP API Security Top 10 vulnerabilities.
   version: 1.0.0
+  contact:
+    name: VULX Security Team
+    email: security@vulx.io
+
+servers:
+  - url: http://api.example.com/v1
+    description: Production server (Non-HTTPS - Security Issue!)
+  - url: https://api.example.com/v1
+    description: Production server (HTTPS)
+
+# No global security defined - triggers AUTH_MISSING findings
+# security:
+#   - bearerAuth: []
+
 paths:
+  # API1: BOLA - Object ID in path without proper authorization
+  /users/{userId}:
+    get:
+      summary: Get user by ID
+      description: Retrieves a user by their ID. May be vulnerable to BOLA.
+      operationId: getUserById
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+    put:
+      summary: Update user
+      operationId: updateUser
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+      responses:
+        '200':
+          description: User updated
+
+  /orders/{orderId}:
+    get:
+      summary: Get order by ID
+      description: Retrieves an order. Contains BOLA vulnerability.
+      operationId: getOrderById
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Order details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+
+  # API2: Broken Authentication - No security defined
+  /auth/login:
+    post:
+      summary: User login
+      description: Authenticates a user. No rate limiting mentioned.
+      operationId: loginUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  refreshToken:
+                    type: string
+
+  /auth/forgot-password:
+    post:
+      summary: Request password reset
+      description: Sensitive business flow - password reset
+      operationId: forgotPassword
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        '200':
+          description: Reset email sent
+
+  # API3: Broken Object Property Level Authorization - Mass Assignment
+  /users:
+    post:
+      summary: Create user
+      description: Creates a new user. May be vulnerable to mass assignment.
+      operationId: createUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                password:
+                  type: string
+                role:
+                  type: string
+                  enum: [user, admin]
+                isAdmin:
+                  type: boolean
+                permissions:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+    get:
+      summary: List all users
+      description: Returns a list of users. Missing pagination.
+      operationId: listUsers
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+
+  # API4: Unrestricted Resource Consumption
+  /files/upload:
+    post:
+      summary: Upload file
+      description: File upload without size limits
+      operationId: uploadFile
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: File uploaded
+
+  /reports:
+    get:
+      summary: Get all reports
+      description: Returns reports without pagination
+      operationId: getReports
+      responses:
+        '200':
+          description: Reports list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Report'
+
+  # API5: Broken Function Level Authorization - Admin endpoints
   /admin/users:
     get:
-      summary: Get users
+      summary: Admin - List all users
+      description: Administrative endpoint without proper authorization
+      operationId: adminListUsers
       responses:
         '200':
-          description: OK
-  /public/posts:
+          description: All users
+
+  /admin/config:
+    put:
+      summary: Update system configuration
+      description: Critical admin function
+      operationId: updateConfig
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Configuration updated
+
+  /internal/metrics:
     get:
-      summary: Get posts
+      summary: Internal metrics
+      description: Internal endpoint exposed
+      operationId: getMetrics
       responses:
         '200':
-          description: OK
+          description: Metrics data
+
+  # API6: Sensitive Business Flows
+  /payments:
+    post:
+      summary: Process payment
+      description: Payment processing - sensitive business flow
+      operationId: processPayment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  type: number
+                cardNumber:
+                  type: string
+                cvv:
+                  type: string
+      responses:
+        '200':
+          description: Payment processed
+
+  /transfers:
+    post:
+      summary: Transfer funds
+      description: Money transfer - sensitive business flow
+      operationId: transferFunds
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fromAccount:
+                  type: string
+                toAccount:
+                  type: string
+                amount:
+                  type: number
+      responses:
+        '200':
+          description: Transfer completed
+
+  /subscriptions/{subscriptionId}/cancel:
+    post:
+      summary: Cancel subscription
+      description: Subscription cancellation
+      operationId: cancelSubscription
+      parameters:
+        - name: subscriptionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Subscription cancelled
+
+  # API7: SSRF - URL parameters
+  /proxy:
+    get:
+      summary: Proxy request
+      description: Proxies requests to external URLs - SSRF risk
+      operationId: proxyRequest
+      parameters:
+        - name: url
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uri
+        - name: callback
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Proxied response
+
+  /webhooks:
+    post:
+      summary: Register webhook
+      description: Webhook registration with URL
+      operationId: registerWebhook
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                callbackUrl:
+                  type: string
+                  format: uri
+                events:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '201':
+          description: Webhook registered
+
+  /images/fetch:
+    post:
+      summary: Fetch remote image
+      description: Fetches an image from URL - SSRF vulnerability
+      operationId: fetchImage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                imageUrl:
+                  type: string
+                  format: uri
+      responses:
+        '200':
+          description: Image fetched
+
+  # API8: Security Misconfiguration
+  /debug/info:
+    get:
+      summary: Debug information
+      description: Debug endpoint that should be disabled in production
+      operationId: getDebugInfo
+      responses:
+        '200':
+          description: Debug info
+        '500':
+          description: Internal server error with stack trace
+
+  /test/echo:
+    post:
+      summary: Test echo endpoint
+      description: Test endpoint for development
+      operationId: testEcho
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Echo response
+
+  /swagger:
+    get:
+      summary: Swagger UI
+      description: API documentation
+      operationId: getSwaggerUI
+      responses:
+        '200':
+          description: Swagger UI HTML
+
+  # API9: Improper Inventory Management
+  /v1/users:
+    get:
+      summary: List users (v1)
+      deprecated: true
+      description: Deprecated endpoint - use /v2/users instead
+      operationId: listUsersV1
+      responses:
+        '200':
+          description: Users list
+
+  /v2/users:
+    get:
+      summary: List users (v2)
+      description: Current version of users endpoint
+      operationId: listUsersV2
+      responses:
+        '200':
+          description: Users list
+
+  # API10: Unsafe Consumption of APIs
+  /integrations/weather:
+    get:
+      summary: Get weather from external API
+      description: Fetches weather data from third-party provider
+      operationId: getWeather
+      parameters:
+        - name: city
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Weather data from external provider
+
+  /integrations/payment-gateway:
+    post:
+      summary: Process via external payment gateway
+      description: Sends payment to third-party payment processor
+      operationId: externalPayment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Payment processed via partner API
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          description: Password hash (should not be exposed!)
+        role:
+          type: string
+        isAdmin:
+          type: boolean
+        apiKey:
+          type: string
+          description: API key (sensitive data exposure!)
+        createdAt:
+          type: string
+          format: date-time
+
+    UserUpdate:
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+        status:
+          type: string
+        verified:
+          type: boolean
+
+    Order:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: string
+        items:
+          type: array
+          items:
+            type: object
+        total:
+          type: number
+        creditCard:
+          type: string
+          description: Credit card number (PCI compliance issue!)
+
+    Report:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        data:
+          type: object
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+    apiKeyAuth:
+      type: apiKey
+      in: query
+      name: api_key
+      description: API key in query string (not recommended!)
+
+    basicAuth:
+      type: http
+      scheme: basic
+      description: Basic authentication (not recommended for production)

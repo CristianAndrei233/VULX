@@ -9,6 +9,7 @@
     "db:down": "docker-compose down"
   },
   "workspaces": [
-    "apps/*"
+    "apps/*",
+    "packages/*"
   ]
 }

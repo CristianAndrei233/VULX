@@ -26,5 +26,9 @@ export interface Finding {
   description: string;
   endpoint: string;
   method: string;
+  remediation?: string;     // Actionable fix guidance with code examples
+  owaspCategory?: string;   // e.g., "API1:2023 - Broken Object Level Authorization"
+  cweId?: string;           // e.g., "CWE-639"
+  evidence?: string;        // Additional evidence or context
   createdAt: string;
 }

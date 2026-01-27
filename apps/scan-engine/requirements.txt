@@ -4,4 +4,6 @@ redis
 psycopg2-binary
 requests
 PyYAML
+prance
+openapi-spec-validator
 

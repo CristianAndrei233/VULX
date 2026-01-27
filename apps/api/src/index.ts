@@ -12,6 +12,9 @@ app.use(helmet());
 app.use(cors());
 app.use(express.json());
 
+import projectRoutes from './routes/projects';
+app.use('/projects', projectRoutes);
+
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'vulx-api' });
 });

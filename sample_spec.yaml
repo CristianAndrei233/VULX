@@ -1,0 +1,17 @@
+openapi: 3.0.0
+info:
+  title: Sample API
+  version: 1.0.0
+paths:
+  /admin/users:
+    get:
+      summary: Get users
+      responses:
+        '200':
+          description: OK
+  /public/posts:
+    get:
+      summary: Get posts
+      responses:
+        '200':
+          description: OK

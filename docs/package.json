@@ -1,0 +1,13 @@
+{
+  "name": "vulx-docs",
+  "version": "1.0.0",
+  "description": "VULX Documentation",
+  "scripts": {
+    "dev": "vitepress dev",
+    "build": "vitepress build",
+    "preview": "vitepress preview"
+  },
+  "devDependencies": {
+    "vitepress": "^1.3.0"
+  }
+}

@@ -13,7 +13,13 @@ app.use(cors());
 app.use(express.json());
 
 import projectRoutes from './routes/projects';
+import billingRoutes from './routes/billing';
+
+// Use raw body for Stripe webhooks
+app.use('/billing/webhook', express.raw({ type: 'application/json' }));
+
 app.use('/projects', projectRoutes);
+app.use('/billing', billingRoutes);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'vulx-api' });

@@ -46,7 +46,8 @@ export const generateScanReport = async (scanId: string): Promise<Buffer> => {
         Keywords: 'security, api, owasp, vulnerability',
         Creator: 'VULX SecureAPI Scanner',
         Producer: 'PDFKit'
-      }
+      },
+      bufferPages: true
     });
     const buffers: Buffer[] = [];
 

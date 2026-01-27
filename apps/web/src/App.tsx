@@ -1,38 +1,44 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import { RequireAuth } from './components/RequireAuth';
 import { Layout } from './components/Layout';
 import { Dashboard } from './pages/Dashboard';
 import { CreateProject } from './pages/CreateProject';
 import { ProjectDetails } from './pages/ProjectDetails';
-import { Onboarding } from './pages/onboarding';
 import { Billing } from './pages/Billing';
+import { Profile } from './pages/Profile';
+import { AdminDashboard } from './pages/AdminDashboard';
+import { Login } from './pages/Login';
+import { Register } from './pages/Register';
 
 function App() {
-  const isOnboardingComplete = localStorage.getItem('vulx-onboarding-complete') === 'true';
-
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Onboarding route */}
-        <Route
-          path="/onboarding"
-          element={isOnboardingComplete ? <Navigate to="/" replace /> : <Onboarding />}
-        />
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
 
-        {/* Main app routes */}
-        <Route path="/" element={<Layout />}>
-          <Route index element={<Dashboard />} />
-          <Route path="new" element={<CreateProject />} />
-          <Route path="projects/:id" element={<ProjectDetails />} />
-          <Route path="billing" element={<Billing />} />
-        </Route>
+          {/* Protected Routes */}
+          <Route path="/" element={
+            <RequireAuth>
+              <Layout />
+            </RequireAuth>
+          }>
+            <Route index element={<Dashboard />} />
+            <Route path="new" element={<CreateProject />} />
+            <Route path="projects/:id" element={<ProjectDetails />} />
+            <Route path="billing" element={<Billing />} />
+            <Route path="profile" element={<Profile />} />
+            <Route path="admin" element={<AdminDashboard />} />
+          </Route>
 
-        {/* Redirect to onboarding if not complete */}
-        <Route
-          path="*"
-          element={isOnboardingComplete ? <Navigate to="/" replace /> : <Navigate to="/onboarding" replace />}
-        />
-      </Routes>
-    </BrowserRouter>
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
 

@@ -8,40 +8,47 @@ datasource db {
 }
 
 model User {
-  id                  String    @id @default(uuid())
-  email               String    @unique
+  id                  String        @id @default(uuid())
+  email               String        @unique
+  passwordHash        String?
   name                String?
-  stripeCustomerId    String?   @unique
-  onboardingCompleted Boolean   @default(false)
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
+  stripeCustomerId    String?       @unique
+  onboardingCompleted Boolean       @default(false)
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
   organizationId      String?
-  organization        Organization? @relation(fields: [organizationId], references: [id])
   subscription        Subscription?
+  organization        Organization? @relation(fields: [organizationId], references: [id])
+  role                Role          @default(USER)
+}
+
+enum Role {
+  ADMIN
+  USER
 }
 
 model Subscription {
   id                   String   @id @default(uuid())
   userId               String   @unique
-  user                 User     @relation(fields: [userId], references: [id])
   stripeSubscriptionId String   @unique
   stripePriceId        String
-  status               String   // active, canceled, past_due, trialing, incomplete
+  status               String
   planId               String
-  plan                 Plan     @relation(fields: [planId], references: [id])
   currentPeriodStart   DateTime
   currentPeriodEnd     DateTime
   cancelAtPeriodEnd    Boolean  @default(false)
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
+  plan                 Plan     @relation(fields: [planId], references: [id])
+  user                 User     @relation(fields: [userId], references: [id])
 }
 
 model Plan {
   id            String         @id @default(uuid())
-  name          String         // Free, Pro, Enterprise
+  name          String
   stripePriceId String         @unique
-  price         Int            // in cents
-  interval      String         // month, year
+  price         Int
+  interval      String
   scansPerMonth Int
   projectLimit  Int
   features      String[]
@@ -64,36 +71,45 @@ model Project {
   id             String       @id @default(uuid())
   name           String
   specUrl        String?
-  specContent    String?      @db.Text
+  specContent    String?
   organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id])
-  scans          Scan[]
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  scans          Scan[]
+  scanFrequency  ScanFrequency @default(MANUAL)
+  nextScanAt     DateTime?
+}
+
+enum ScanFrequency {
+  MANUAL
+  DAILY
+  WEEKLY
 }
 
 model Scan {
   id          String    @id @default(uuid())
   projectId   String
-  project     Project   @relation(fields: [projectId], references: [id])
-  status      String    @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
+  status      String    @default("PENDING")
   startedAt   DateTime  @default(now())
-  completedAt DateTime?
-  findings    Finding[]
+  completedAt      DateTime?
+  findings         Finding[]
+  project          Project   @relation(fields: [projectId], references: [id])
+  notificationSent Boolean   @default(false)
 }
 
 model Finding {
   id            String   @id @default(uuid())
   scanId        String
-  scan          Scan     @relation(fields: [scanId], references: [id])
-  type          String   // e.g., BOLA, AUTH_MISSING, SSRF_RISK
-  severity      String   // CRITICAL, HIGH, MEDIUM, LOW, INFO
-  description   String   @db.Text
+  type          String
+  severity      String
+  description   String
   endpoint      String
   method        String
-  remediation   String?  @db.Text  // Actionable fix guidance with code examples
-  owaspCategory String?  // e.g., "API1:2023 - Broken Object Level Authorization"
-  cweId         String?  // e.g., "CWE-639"
-  evidence      String?  @db.Text  // Additional evidence or context
   createdAt     DateTime @default(now())
+  remediation   String?
+  cweId         String?
+  evidence      String?
+  owaspCategory String?
+  scan          Scan     @relation(fields: [scanId], references: [id])
 }

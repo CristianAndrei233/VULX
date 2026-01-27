@@ -6,13 +6,13 @@
     "dev:api": "npm run dev --workspace=apps/api",
     "dev:web": "npm run dev --workspace=apps/web",
     "dev:docs": "npm run dev --workspace=docs",
+    "dev:worker": "export PYTHONPATH=$PYTHONPATH:$(pwd)/apps/scan-engine && ./apps/scan-engine/.venv/bin/python apps/scan-engine/src/worker.py",
     "build:docs": "npm run build --workspace=docs",
     "db:up": "docker-compose up -d",
     "db:down": "docker-compose down"
   },
   "workspaces": [
     "apps/*",
-    "packages/*"
     "packages/*",
     "docs"
   ]

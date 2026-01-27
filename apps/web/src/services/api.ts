@@ -29,4 +29,13 @@ export const triggerScan = async (projectId: string) => {
   return response.data;
 };
 
+export const updateProject = async (id: string, data: Partial<Project>) => {
+  const response = await api.put<Project>(`/projects/${id}`, data);
+  return response.data;
+};
+
+export const deleteProject = async (id: string) => {
+  await api.delete(`/projects/${id}`);
+};
+
 export default api;

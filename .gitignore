@@ -1,0 +1,21 @@
+# Node
+node_modules/
+dist/
+coverage/
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+/apps/scan-engine/.venv/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+
+# IDE
+.idea/
+.vscode/
+.DS_Store

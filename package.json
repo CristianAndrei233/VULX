@@ -1,0 +1,14 @@
+{
+  "name": "vulx-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev:api": "npm run dev --workspace=apps/api",
+    "dev:web": "npm run dev --workspace=apps/web",
+    "db:up": "docker-compose up -d",
+    "db:down": "docker-compose down"
+  },
+  "workspaces": [
+    "apps/*"
+  ]
+}

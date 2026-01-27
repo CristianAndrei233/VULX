@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, Outlet } from 'react-router-dom';
-import { Shield, LayoutDashboard, Plus } from 'lucide-react';
+import { Shield, LayoutDashboard, Plus, CreditCard } from 'lucide-react';
 
 export const Layout: React.FC = () => {
     return (
@@ -21,6 +21,10 @@ export const Layout: React.FC = () => {
                                 <Link to="/new" className="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 text-sm font-medium">
                                     <Plus className="w-4 h-4 mr-2" />
                                     New Project
+                                </Link>
+                                <Link to="/billing" className="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 text-sm font-medium">
+                                    <CreditCard className="w-4 h-4 mr-2" />
+                                    Billing
                                 </Link>
                             </div>
                         </div>

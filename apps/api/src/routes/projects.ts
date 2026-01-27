@@ -11,6 +11,15 @@ const CreateProjectSchema = z.object({
   specContent: z.string().optional(),
 });
 
+// List all projects (for demo purposes)
+router.get('/', async (req, res) => {
+  const projects = await prisma.project.findMany({
+    orderBy: { createdAt: 'desc' },
+    include: { scans: { take: 1, orderBy: { startedAt: 'desc' } } }
+  });
+  res.json(projects);
+});
+
 router.post('/', async (req, res) => {
   try {
     const { name, organizationId, specContent } = CreateProjectSchema.parse(req.body);
@@ -32,7 +41,10 @@ router.post('/', async (req, res) => {
 
     res.json(project);
   } catch (error) {
-    res.status(400).json({ error: 'Invalid request' });
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: 'Validation failed', details: error.issues });
+    }
+    res.status(400).json({ error: 'Invalid request', details: String(error) });
   }
 });
 
@@ -65,7 +77,7 @@ router.get('/:projectId', async (req, res) => {
     const { projectId } = req.params;
     const project = await prisma.project.findUnique({ 
         where: { id: projectId },
-        include: { scans: { include: { findings: true } } }
+        include: { scans: { include: { findings: true }, orderBy: { startedAt: 'desc' } } }
     });
     if (!project) return res.status(404).json({ error: "Not found" });
     res.json(project);

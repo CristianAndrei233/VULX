@@ -1,0 +1,24 @@
+name: 'VULX API Security Scan'
+description: 'Automated API Security Scanning for your pipeline'
+inputs:
+  project-id:
+    description: 'VULX Project ID'
+    required: true
+  api-url:
+    description: 'VULX API URL'
+    required: false
+    default: 'https://api.vulx.io' # Placeholder for prod
+  fail-on:
+    description: 'Fail build on severity (CRITICAL, HIGH, MEDIUM, LOW)'
+    required: false
+    default: 'HIGH'
+runs:
+  using: 'composite'
+  steps:
+    - name: Install VULX CLI
+      shell: bash
+      run: npm install -g @vulx/cli
+    
+    - name: Run Scan
+      shell: bash
+      run: vulx scan --project-id ${{ inputs.project-id }} --url ${{ inputs.api-url }} --fail-on ${{ inputs.fail-on }}

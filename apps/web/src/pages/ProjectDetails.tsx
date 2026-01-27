@@ -99,6 +99,16 @@ export const ProjectDetails: React.FC = () => {
                                                 <span className="text-xs text-gray-500">
                                                     {format(new Date(latestScan.startedAt), 'p')}
                                                 </span>
+                                                {(latestScan.status === 'COMPLETED' || latestScan.status === 'FAILED') && (
+                                                    <a
+                                                        href={`http://localhost:3001/projects/${project.id}/scans/${latestScan.id}/report`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-xs text-indigo-600 hover:text-indigo-900 border border-indigo-200 rounded px-2 py-0.5"
+                                                    >
+                                                        PDF Report
+                                                    </a>
+                                                )}
                                             </div>
                                         ) : 'Never'}
                                     </dd>

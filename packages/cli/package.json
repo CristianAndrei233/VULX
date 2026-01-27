@@ -1,0 +1,23 @@
+{
+    "name": "@vulx/cli",
+    "version": "1.0.0",
+    "description": "CLI for VULX API Security Scanner",
+    "main": "dist/index.js",
+    "bin": {
+        "vulx": "./bin/vulx"
+    },
+    "scripts": {
+        "build": "tsc",
+        "start": "node dist/index.js"
+    },
+    "dependencies": {
+        "axios": "^1.6.0",
+        "chalk": "^4.1.2",
+        "commander": "^11.0.0",
+        "ora": "^5.4.1"
+    },
+    "devDependencies": {
+        "@types/node": "^20.0.0",
+        "typescript": "^5.0.0"
+    }
+}

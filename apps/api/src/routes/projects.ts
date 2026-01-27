@@ -73,6 +73,22 @@ router.post('/:projectId/scans', async (req, res) => {
   }
 });
 
+import { generateScanReport } from '../services/reportGenerator';
+
+router.get('/:projectId/scans/:scanId/report', async (req, res) => {
+  try {
+     const { scanId } = req.params;
+     const pdfBuffer = await generateScanReport(scanId);
+     
+     res.setHeader('Content-Type', 'application/pdf');
+     res.setHeader('Content-Disposition', `attachment; filename=vulx-report-${scanId}.pdf`);
+     res.send(pdfBuffer);
+  } catch (error) {
+     console.error(error);
+     res.status(500).json({ error: 'Failed to generate report' });
+  }
+});
+
 router.get('/:projectId', async (req, res) => {
     const { projectId } = req.params;
     const project = await prisma.project.findUnique({ 

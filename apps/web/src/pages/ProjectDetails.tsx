@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getProject, triggerScan } from '../services/api';
 import type { Project, Finding } from '../types';
+import { useEnvironment } from '../context/EnvironmentContext';
+import { ScanTypeModal, type ScanType } from '../components/ScanTypeModal';
 import {
     ArrowLeft,
     Play,
@@ -14,10 +16,12 @@ import {
     Clock,
     FileText,
     Copy,
-    CheckCircle
+    CheckCircle,
+    Globe,
+    History
 } from 'lucide-react';
 import { Button, Card, CardHeader, Badge, StatusBadge, SeverityBadge } from '../components/ui';
-import { format } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import { clsx } from 'clsx';
 
 interface FindingCardProps {
@@ -159,10 +163,12 @@ const ProjectSkeleton: React.FC = () => (
 export const ProjectDetails: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const { environment } = useEnvironment();
     const [project, setProject] = useState<Project | null>(null);
     const [loading, setLoading] = useState(true);
     const [scanning, setScanning] = useState(false);
     const [severityFilter, setSeverityFilter] = useState<string>('ALL');
+    const [showScanModal, setShowScanModal] = useState(false);
 
     const fetchProject = async () => {
         if (!id) return;
@@ -182,13 +188,14 @@ export const ProjectDetails: React.FC = () => {
             fetchProject();
         }, 5000);
         return () => clearInterval(interval);
-    }, [id]);
+    }, [id, environment]);
 
-    const handleScan = async () => {
+    const handleScan = async (scanType: ScanType) => {
         if (!project) return;
         setScanning(true);
         try {
-            await triggerScan(project.id);
+            await triggerScan(project.id, scanType);
+            setShowScanModal(false);
             await fetchProject();
         } catch (error) {
             console.error('Failed to trigger scan', error);
@@ -240,10 +247,20 @@ export const ProjectDetails: React.FC = () => {
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
+                    {/* Environment Indicator */}
+                    <div className={clsx(
+                        "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border",
+                        environment === 'PRODUCTION'
+                            ? "bg-indigo-50 text-indigo-700 border-indigo-200"
+                            : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                    )}>
+                        <Globe className="w-3.5 h-3.5" />
+                        {environment}
+                    </div>
                     <Button
                         variant="primary"
                         leftIcon={<Play className="w-4 h-4" />}
-                        onClick={handleScan}
+                        onClick={() => setShowScanModal(true)}
                         isLoading={scanning}
                         disabled={scanning || latestScan?.status === 'PENDING' || latestScan?.status === 'PROCESSING'}
                     >
@@ -381,6 +398,15 @@ export const ProjectDetails: React.FC = () => {
                     </Card>
                 </div>
             </div>
+
+            {/* Scan Type Selection Modal */}
+            <ScanTypeModal
+                isOpen={showScanModal}
+                onClose={() => setShowScanModal(false)}
+                onConfirm={handleScan}
+                isLoading={scanning}
+                projectName={project.name}
+            />
         </div>
     );
 };

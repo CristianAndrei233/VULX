@@ -38,8 +38,8 @@ export const createProject = async (data: Partial<Project>) => {
   return response.data;
 };
 
-export const triggerScan = async (projectId: string) => {
-  const response = await api.post<Scan>(`/projects/${projectId}/scans`);
+export const triggerScan = async (projectId: string, scanType: 'quick' | 'standard' | 'full' = 'standard') => {
+  const response = await api.post<Scan>(`/projects/${projectId}/scans`, { scanType });
   return response.data;
 };
 

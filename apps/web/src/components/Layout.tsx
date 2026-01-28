@@ -20,12 +20,13 @@ import { useEnvironment } from '../context/EnvironmentContext';
 import { clsx } from 'clsx'; // Ideally import from tailwind-merge util if available
 
 const NAV_ITEMS = [
-    { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
+    { label: 'Dashboard', icon: LayoutDashboard, path: '/' },
     { label: 'Projects', icon: Shield, path: '/projects' },
     { label: 'Scans', icon: Scan, path: '/scans' },
     { label: 'Remediation', icon: Shield, path: '/remediation' },
     { label: 'Trends', icon: Terminal, path: '/trends' },
-    { label: 'Settings', icon: Settings, path: '/settings' },
+    { label: 'Integrations', icon: Globe, path: '/integrations' },
+    { label: 'Settings', icon: Settings, path: '/profile' },
 ];
 
 const EnvironmentToggle = () => {
@@ -106,7 +107,9 @@ export const Layout = () => {
                 {/* Navigation */}
                 <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
                     {NAV_ITEMS.map((item) => {
-                        const isActive = location.pathname.startsWith(item.path);
+                        const isActive = item.path === '/'
+                            ? location.pathname === '/' || location.pathname === '/dashboard'
+                            : location.pathname.startsWith(item.path);
                         const Icon = item.icon;
 
                         return (

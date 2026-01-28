@@ -29,21 +29,21 @@ features:
   - icon: 🛡️
     title: OWASP API Top 10
     details: Comprehensive detection of BOLA, broken authentication, injection attacks, security misconfigurations, and more.
+  - icon: 🏢
+    title: Multi-Environment Support
+    details: Separate Sandbox and Production environments with isolated data, API keys, and scan histories for enterprise workflows.
   - icon: 📋
     title: Compliance Mapping
     details: Automatic mapping of findings to SOC 2, PCI-DSS, HIPAA, GDPR, and ISO 27001 compliance frameworks.
   - icon: 🔧
-    title: Auto-Remediation
-    details: Get fix recommendations with working code examples in Python, JavaScript, Java, and Go.
+    title: Smart Deduplication
+    details: Intelligent finding tracking across scans. No duplicates, regression detection, and inherited status for repeat issues.
   - icon: 🔄
     title: CI/CD Integration
     details: Docker agent for GitHub Actions, GitLab CI, Jenkins. Fail builds on critical vulnerabilities.
   - icon: 📊
-    title: Professional Reports
-    details: Executive summaries, detailed findings, OWASP coverage matrix, and remediation roadmaps in PDF format.
-  - icon: 💻
-    title: Embedded CLI
-    details: Browser-based terminal for power users. Run scans and generate reports without leaving the dashboard.
+    title: Flexible Scan Types
+    details: Quick (2-5min), Standard (10-30min), or Full (30-60min) scans to match your CI/CD speed requirements.
 ---
 
 ## Quick Example

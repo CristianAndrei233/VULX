@@ -231,86 +231,83 @@ const RiskScoreGauge: React.FC<{ score: number }> = ({ score }) => {
   );
 };
 
-// Projects List
-const ProjectsList: React.FC<{ projects: Project[] }> = ({ projects }) => (
-  <Card padding="none">
-    <div className="px-6 py-4 border-b border-slate-100">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-slate-900">Projects</h3>
-        <Button variant="secondary" size="sm" leftIcon={<Plus className="w-4 h-4" />}>
-          <Link to="/new">Add Project</Link>
-        </Button>
-      </div>
-    </div>
-    <div className="divide-y divide-slate-100">
-      {projects.length === 0 ? (
-        <div className="px-6 py-12 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
-            <Target className="w-8 h-8 text-slate-400" />
+// Projects At Risk - Shows only projects with critical/high findings
+const ProjectsAtRisk: React.FC<{ projects: Project[] }> = ({ projects }) => {
+  // Filter projects that have critical or high findings
+  const projectsWithIssues = projects
+    .filter(p => {
+      const lastScan = p.scans?.[0];
+      return lastScan?.findings?.some(f => f.severity === 'CRITICAL' || f.severity === 'HIGH');
+    })
+    .slice(0, 5); // Show top 5
+
+  return (
+    <Card padding="none">
+      <div className="px-6 py-4 border-b border-slate-100">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 text-severity-high" />
+            <h3 className="text-lg font-semibold text-slate-900">Projects Requiring Attention</h3>
           </div>
-          <h4 className="text-lg font-medium text-slate-900 mb-2">No projects yet</h4>
-          <p className="text-slate-500 mb-4 text-sm">Create your first project to start scanning APIs</p>
-          <Link to="/new">
-            <Button variant="primary" leftIcon={<Plus className="w-4 h-4" />}>
-              Create Project
-            </Button>
+          <Link to="/projects" className="text-sm text-industrial-action hover:text-industrial-action-hover font-medium flex items-center gap-1">
+            View all <ExternalLink className="w-3.5 h-3.5" />
           </Link>
         </div>
-      ) : (
-        projects.map((project, index) => {
-          const lastScan = project.scans?.[0];
-          return (
-            <Link
-              key={project.id}
-              to={`/projects/${project.id}`}
-              className="block px-6 py-4 hover:bg-slate-50 transition-colors animate-fade-in"
-              style={{ animationDelay: `${index * 50}ms` }}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <div className="w-11 h-11 rounded-industrial bg-industrial-surface flex items-center justify-center">
-                    <Shield className="w-5 h-5 text-white" />
+      </div>
+      <div className="divide-y divide-slate-100">
+        {projectsWithIssues.length === 0 ? (
+          <div className="px-6 py-8 text-center">
+            <div className="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center mx-auto mb-3">
+              <Shield className="w-6 h-6 text-emerald-500" />
+            </div>
+            <h4 className="text-sm font-medium text-slate-900 mb-1">All clear!</h4>
+            <p className="text-slate-500 text-sm">No projects with critical or high severity issues</p>
+          </div>
+        ) : (
+          projectsWithIssues.map((project, index) => {
+            const lastScan = project.scans?.[0];
+            const criticalCount = lastScan?.findings?.filter(f => f.severity === 'CRITICAL').length || 0;
+            const highCount = lastScan?.findings?.filter(f => f.severity === 'HIGH').length || 0;
+
+            return (
+              <Link
+                key={project.id}
+                to={`/projects/${project.id}`}
+                className="block px-6 py-4 hover:bg-slate-50 transition-colors animate-fade-in"
+                style={{ animationDelay: `${index * 50}ms` }}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-10 h-10 rounded-lg bg-industrial-surface flex items-center justify-center">
+                      <Shield className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-semibold text-slate-900">{project.name}</h4>
+                      <p className="text-xs text-slate-500 truncate max-w-xs">
+                        {project.targetUrl || 'No target URL'}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="text-sm font-semibold text-slate-900">{project.name}</h4>
-                    <p className="text-xs text-slate-500 truncate max-w-xs">
-                      {project.targetUrl || project.specUrl || 'No target URL'}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-4">
-                  {lastScan && (
-                    <div className="hidden sm:flex items-center space-x-2">
-                      <StatusBadge status={lastScan.status} size="sm" />
-                      {lastScan.findingsCount && (
-                        <div className="flex items-center space-x-1">
-                          {(lastScan.findingsCount.CRITICAL || 0) > 0 && (
-                            <Badge variant="critical" size="sm">
-                              {lastScan.findingsCount.CRITICAL}C
-                            </Badge>
-                          )}
-                          {(lastScan.findingsCount.HIGH || 0) > 0 && (
-                            <Badge variant="high" size="sm">
-                              {lastScan.findingsCount.HIGH}H
-                            </Badge>
-                          )}
-                        </div>
+                  <div className="flex items-center space-x-3">
+                    <div className="flex items-center space-x-1">
+                      {criticalCount > 0 && (
+                        <Badge variant="critical" size="sm">{criticalCount} Critical</Badge>
+                      )}
+                      {highCount > 0 && (
+                        <Badge variant="high" size="sm">{highCount} High</Badge>
                       )}
                     </div>
-                  )}
-                  {!lastScan && (
-                    <span className="text-xs text-slate-400 italic">No scans</span>
-                  )}
-                  <ChevronRight className="w-5 h-5 text-slate-400" />
+                    <ChevronRight className="w-5 h-5 text-slate-400" />
+                  </div>
                 </div>
-              </div>
-            </Link>
-          );
-        })
-      )}
-    </div>
-  </Card>
-);
+              </Link>
+            );
+          })
+        )}
+      </div>
+    </Card>
+  );
+};
 
 // Loading Skeleton
 const DashboardSkeleton: React.FC = () => (
@@ -445,11 +442,34 @@ export const Dashboard: React.FC = () => {
         />
       </div>
 
+      {/* Environment Banner */}
+      <Card className={clsx(
+        "border-l-4 py-3",
+        environment === 'PRODUCTION'
+          ? "border-l-indigo-500 bg-indigo-50/50"
+          : "border-l-emerald-500 bg-emerald-50/50"
+      )}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className={clsx(
+              "w-3 h-3 rounded-full animate-pulse",
+              environment === 'PRODUCTION' ? "bg-indigo-500" : "bg-emerald-500"
+            )} />
+            <span className="font-medium text-slate-700">
+              Viewing <span className="font-bold">{environment}</span> environment data
+            </span>
+          </div>
+          <span className="text-sm text-slate-500">
+            {stats.totalProjects} projects, {stats.totalScans} total scans
+          </span>
+        </div>
+      </Card>
+
       {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column - Projects */}
+        {/* Left Column - Overview */}
         <div className="lg:col-span-2 space-y-6">
-          <ProjectsList projects={projects} />
+          <ProjectsAtRisk projects={projects} />
           <RecentScans scans={stats.recentScans} />
         </div>
 

@@ -4,6 +4,7 @@ import { EnvironmentProvider } from './context/EnvironmentContext';
 import { RequireAuth } from './components/RequireAuth';
 import { Layout } from './components/Layout';
 import { Dashboard } from './pages/Dashboard';
+import { Projects } from './pages/Projects';
 import { CreateProject } from './pages/CreateProject';
 import { ProjectDetails } from './pages/ProjectDetails';
 import { ProjectSettings } from './pages/ProjectSettings';
@@ -37,10 +38,10 @@ function App() {
                 <Layout />
               </RequireAuth>
             }>
-              <Route path="dashboard" element={<Navigate to="/" replace />} />
-              <Route path="projects" element={<Navigate to="/" replace />} />
-              <Route path="settings" element={<Navigate to="/profile" replace />} />
               <Route index element={<Dashboard />} />
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="projects" element={<Projects />} />
+              <Route path="settings" element={<Navigate to="/profile" replace />} />
               <Route path="new" element={<CreateProject />} />
               <Route path="projects/:id" element={<ProjectDetails />} />
               <Route path="projects/:id/settings" element={<ProjectSettings />} />

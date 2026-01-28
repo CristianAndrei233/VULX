@@ -1,28 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
   Shield,
-  AlertTriangle,
-  Clock,
-  CheckCircle,
-  XCircle,
+  Bug,
+  Target,
+  ArrowLeft,
   ChevronDown,
-  ChevronUp,
+  ChevronRight,
   ExternalLink,
   Copy,
   Download,
-  Filter,
-  Search,
   FileText,
-  Code,
-  Info,
-  Bug,
-  Zap,
-  Target,
-  ArrowLeft
+  Search,
+  CheckCircle,
+  AlertTriangle,
+  Info
 } from 'lucide-react';
-import type { Scan, Finding } from '../types';
-import { format } from 'date-fns';
+import type { Finding } from '../types';
+import { Card, Button, Badge, SeverityBadge } from '../components/ui';
+import { clsx } from 'clsx';
 
 // Sample data for demonstration
 const sampleFindings: Finding[] = [
@@ -72,26 +68,19 @@ const result = await db.query(query, [userId]);`,
     endpoint: '/api/auth/login',
     method: 'POST',
     evidence: 'Successfully sent 100 login attempts within 10 seconds without being blocked.',
-    remediation: 'Implement rate limiting on authentication endpoints. Consider using exponential backoff and account lockout after multiple failed attempts.',
-    codeExample: `// Express.js with express-rate-limit
-const rateLimit = require('express-rate-limit');
-
+    remediation: 'Implement rate limiting on authentication endpoints.',
+    codeExample: `const rateLimit = require('express-rate-limit');
 const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 attempts per window
+  windowMs: 15 * 60 * 1000,
+  max: 5,
   message: 'Too many login attempts'
 });
-
 app.post('/api/auth/login', loginLimiter, loginHandler);`,
     owaspCategory: 'API4:2023 - Unrestricted Resource Consumption',
     cweId: 'CWE-307',
     cvssScore: 7.5,
-    complianceMappings: {
-      soc2: ['CC6.1', 'CC6.6'],
-      pci_dss: ['8.1.6']
-    },
     status: 'OPEN',
-    references: ['https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html'],
+    references: [],
     createdAt: new Date().toISOString()
   },
   {
@@ -107,24 +96,12 @@ app.post('/api/auth/login', loginLimiter, loginHandler);`,
     method: 'GET',
     parameter: 'id',
     evidence: 'Authenticated as user_123, successfully accessed profile of user_456',
-    remediation: 'Implement proper authorization checks to ensure users can only access their own resources.',
-    codeExample: `// Add authorization check
-app.get('/api/users/:id/profile', authenticate, async (req, res) => {
-  // Verify the requesting user has access
-  if (req.user.id !== req.params.id && !req.user.isAdmin) {
-    return res.status(403).json({ error: 'Forbidden' });
-  }
-  // ... rest of handler
-});`,
+    remediation: 'Implement proper authorization checks.',
     owaspCategory: 'API1:2023 - Broken Object Level Authorization',
     cweId: 'CWE-639',
     cvssScore: 8.1,
-    complianceMappings: {
-      soc2: ['CC6.1'],
-      hipaa: ['164.312(a)(1)']
-    },
     status: 'OPEN',
-    references: ['https://owasp.org/API-Security/editions/2023/en/0xa1-broken-object-level-authorization/'],
+    references: [],
     createdAt: new Date().toISOString()
   },
   {
@@ -140,25 +117,11 @@ app.get('/api/users/:id/profile', authenticate, async (req, res) => {
     method: 'GET',
     evidence: 'Missing headers: X-Content-Type-Options, X-Frame-Options, Content-Security-Policy',
     remediation: 'Add security headers to all API responses.',
-    codeExample: `// Express.js with helmet
-const helmet = require('helmet');
-app.use(helmet());
-
-// Or manually:
-app.use((req, res, next) => {
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'DENY');
-  res.setHeader('Content-Security-Policy', "default-src 'self'");
-  next();
-});`,
     owaspCategory: 'API8:2023 - Security Misconfiguration',
     cweId: 'CWE-693',
     cvssScore: 5.3,
-    complianceMappings: {
-      pci_dss: ['6.5.10']
-    },
     status: 'OPEN',
-    references: ['https://owasp.org/www-project-secure-headers/'],
+    references: [],
     createdAt: new Date().toISOString()
   },
   {
@@ -172,19 +135,8 @@ app.use((req, res, next) => {
     description: 'Error responses include stack traces and internal implementation details.',
     endpoint: '/api/users/invalid',
     method: 'GET',
-    evidence: 'Error response includes: "Error: Cannot read property \'id\' of undefined\\n    at UserController.getUser (/app/src/controllers/user.js:45:12)"',
-    remediation: 'Implement proper error handling that returns generic error messages to clients while logging detailed errors server-side.',
-    codeExample: `// Global error handler
-app.use((err, req, res, next) => {
-  // Log detailed error internally
-  console.error(err.stack);
-
-  // Return generic message to client
-  res.status(500).json({
-    error: 'Internal Server Error',
-    requestId: req.id // For correlation
-  });
-});`,
+    evidence: 'Error response includes stack trace',
+    remediation: 'Implement proper error handling.',
     owaspCategory: 'API8:2023 - Security Misconfiguration',
     cweId: 'CWE-209',
     cvssScore: 3.7,
@@ -194,15 +146,7 @@ app.use((err, req, res, next) => {
   }
 ];
 
-const severityColors = {
-  CRITICAL: { bg: 'bg-red-100', text: 'text-red-800', border: 'border-red-300', badge: 'bg-red-500' },
-  HIGH: { bg: 'bg-orange-100', text: 'text-orange-800', border: 'border-orange-300', badge: 'bg-orange-500' },
-  MEDIUM: { bg: 'bg-yellow-100', text: 'text-yellow-800', border: 'border-yellow-300', badge: 'bg-yellow-500' },
-  LOW: { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-300', badge: 'bg-blue-500' },
-  INFO: { bg: 'bg-gray-100', text: 'text-gray-800', border: 'border-gray-300', badge: 'bg-gray-500' }
-};
-
-const engineIcons = {
+const engineIcons: Record<string, React.ReactNode> = {
   zap: <Shield className="w-4 h-4" />,
   nuclei: <Target className="w-4 h-4" />,
   schemathesis: <Bug className="w-4 h-4" />,
@@ -210,57 +154,79 @@ const engineIcons = {
 };
 
 // Finding Card Component
-const FindingCard: React.FC<{ finding: Finding; isExpanded: boolean; onToggle: () => void }> = ({
-  finding,
-  isExpanded,
-  onToggle
-}) => {
-  const colors = severityColors[finding.severity];
+const FindingCard: React.FC<{
+  finding: Finding;
+  isExpanded: boolean;
+  onToggle: () => void;
+}> = ({ finding, isExpanded, onToggle }) => {
   const [activeTab, setActiveTab] = useState<'details' | 'evidence' | 'remediation'>('details');
+  const [copied, setCopied] = useState(false);
+
+  const severityBorder: Record<string, string> = {
+    CRITICAL: 'border-l-red-500',
+    HIGH: 'border-l-orange-500',
+    MEDIUM: 'border-l-amber-400',
+    LOW: 'border-l-blue-500',
+    INFO: 'border-l-slate-400'
+  };
+
+  const handleCopy = async (text: string) => {
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
-    <div className={`bg-white rounded-lg border ${colors.border} overflow-hidden`}>
+    <Card
+      variant="default"
+      padding="none"
+      className={clsx(
+        'border-l-4 overflow-hidden transition-all',
+        severityBorder[finding.severity] || 'border-l-slate-400'
+      )}
+    >
       {/* Header */}
       <button
         onClick={onToggle}
-        className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors"
+        className="w-full px-5 py-4 flex items-center justify-between hover:bg-slate-50/50 transition-colors text-left"
       >
-        <div className="flex items-center space-x-3">
-          <span className={`px-2 py-1 text-xs font-bold rounded ${colors.bg} ${colors.text}`}>
-            {finding.severity}
-          </span>
-          <div className="flex items-center space-x-2 text-gray-500">
-            {engineIcons[finding.engine]}
-            <span className="text-xs uppercase">{finding.engine}</span>
-          </div>
-          <h3 className="font-medium text-gray-900 text-left">{finding.title}</h3>
-        </div>
-        <div className="flex items-center space-x-4">
-          <span className="text-sm text-gray-500 font-mono">
-            {finding.method} {finding.endpoint}
-          </span>
+        <div className="flex items-center gap-3 min-w-0">
           {isExpanded ? (
-            <ChevronUp className="w-5 h-5 text-gray-400" />
+            <ChevronDown className="w-4 h-4 text-slate-400 flex-shrink-0" />
           ) : (
-            <ChevronDown className="w-5 h-5 text-gray-400" />
+            <ChevronRight className="w-4 h-4 text-slate-400 flex-shrink-0" />
           )}
+          <SeverityBadge severity={finding.severity} size="sm" />
+          <div className="flex items-center gap-2 text-slate-400">
+            {engineIcons[finding.engine]}
+            <span className="text-xs uppercase font-medium">{finding.engine}</span>
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-slate-900 truncate">{finding.title}</p>
+          </div>
+        </div>
+        <div className="hidden sm:flex items-center gap-3 flex-shrink-0 ml-4">
+          <code className="text-xs font-mono bg-slate-100 px-2.5 py-1 rounded-md text-slate-600">
+            {finding.method} {finding.endpoint}
+          </code>
         </div>
       </button>
 
       {/* Expanded Content */}
       {isExpanded && (
-        <div className="border-t border-gray-200">
+        <div className="border-t border-slate-100 animate-fade-in">
           {/* Tabs */}
-          <div className="flex border-b border-gray-200">
+          <div className="flex border-b border-slate-100 bg-slate-50/50">
             {(['details', 'evidence', 'remediation'] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2 text-sm font-medium capitalize ${
+                className={clsx(
+                  'px-5 py-3 text-sm font-medium capitalize transition-colors',
                   activeTab === tab
-                    ? 'text-indigo-600 border-b-2 border-indigo-600'
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
+                    ? 'text-indigo-600 border-b-2 border-indigo-600 bg-white'
+                    : 'text-slate-500 hover:text-slate-700'
+                )}
               >
                 {tab}
               </button>
@@ -268,85 +234,68 @@ const FindingCard: React.FC<{ finding: Finding; isExpanded: boolean; onToggle: (
           </div>
 
           {/* Tab Content */}
-          <div className="p-4">
+          <div className="p-5">
             {activeTab === 'details' && (
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <div>
-                  <h4 className="text-sm font-medium text-gray-700 mb-1">Description</h4>
-                  <p className="text-sm text-gray-600">{finding.description}</p>
+                  <h4 className="text-sm font-semibold text-slate-700 mb-2">Description</h4>
+                  <p className="text-sm text-slate-600 leading-relaxed">{finding.description}</p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-700 mb-1">OWASP Category</h4>
-                    <p className="text-sm text-gray-600">{finding.owaspCategory || 'N/A'}</p>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="bg-slate-50 rounded-lg p-3">
+                    <h4 className="text-xs font-medium text-slate-500 uppercase mb-1">OWASP</h4>
+                    <p className="text-sm text-slate-700 font-medium">{finding.owaspCategory || 'N/A'}</p>
                   </div>
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-700 mb-1">CWE ID</h4>
-                    <p className="text-sm text-gray-600">
-                      {finding.cweId ? (
-                        <a
-                          href={`https://cwe.mitre.org/data/definitions/${finding.cweId.replace('CWE-', '')}.html`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-indigo-600 hover:underline flex items-center"
-                        >
-                          {finding.cweId}
-                          <ExternalLink className="w-3 h-3 ml-1" />
-                        </a>
-                      ) : 'N/A'}
-                    </p>
+                  <div className="bg-slate-50 rounded-lg p-3">
+                    <h4 className="text-xs font-medium text-slate-500 uppercase mb-1">CWE</h4>
+                    {finding.cweId ? (
+                      <a
+                        href={`https://cwe.mitre.org/data/definitions/${finding.cweId.replace('CWE-', '')}.html`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-indigo-600 hover:underline flex items-center gap-1 font-medium"
+                      >
+                        {finding.cweId}
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    ) : (
+                      <p className="text-sm text-slate-700">N/A</p>
+                    )}
                   </div>
                   {finding.cvssScore && (
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-700 mb-1">CVSS Score</h4>
-                      <p className="text-sm text-gray-600">{finding.cvssScore} / 10</p>
+                    <div className="bg-slate-50 rounded-lg p-3">
+                      <h4 className="text-xs font-medium text-slate-500 uppercase mb-1">CVSS Score</h4>
+                      <p className={clsx(
+                        'text-sm font-bold',
+                        finding.cvssScore >= 9 ? 'text-red-600' :
+                          finding.cvssScore >= 7 ? 'text-orange-600' :
+                            finding.cvssScore >= 4 ? 'text-amber-600' : 'text-blue-600'
+                      )}>
+                        {finding.cvssScore} / 10
+                      </p>
                     </div>
                   )}
                   {finding.parameter && (
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-700 mb-1">Vulnerable Parameter</h4>
-                      <code className="text-sm bg-gray-100 px-2 py-0.5 rounded">{finding.parameter}</code>
+                    <div className="bg-slate-50 rounded-lg p-3">
+                      <h4 className="text-xs font-medium text-slate-500 uppercase mb-1">Parameter</h4>
+                      <code className="text-sm bg-white px-2 py-0.5 rounded border border-slate-200">{finding.parameter}</code>
                     </div>
                   )}
                 </div>
 
                 {finding.complianceMappings && Object.keys(finding.complianceMappings).length > 0 && (
                   <div>
-                    <h4 className="text-sm font-medium text-gray-700 mb-2">Compliance Mappings</h4>
+                    <h4 className="text-sm font-semibold text-slate-700 mb-2">Compliance Mappings</h4>
                     <div className="flex flex-wrap gap-2">
-                      {Object.entries(finding.complianceMappings).map(([framework, controls]) => (
-                        controls && controls.map((control) => (
-                          <span
-                            key={`${framework}-${control}`}
-                            className="px-2 py-1 text-xs bg-purple-100 text-purple-700 rounded"
-                          >
+                      {Object.entries(finding.complianceMappings).map(([framework, controls]) =>
+                        controls?.map((control) => (
+                          <Badge key={`${framework}-${control}`} variant="info" size="sm">
                             {framework.toUpperCase()}: {control}
-                          </span>
+                          </Badge>
                         ))
-                      ))}
+                      )}
                     </div>
-                  </div>
-                )}
-
-                {finding.references && finding.references.length > 0 && (
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-700 mb-1">References</h4>
-                    <ul className="space-y-1">
-                      {finding.references.map((ref, idx) => (
-                        <li key={idx}>
-                          <a
-                            href={ref}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-sm text-indigo-600 hover:underline flex items-center"
-                          >
-                            {ref}
-                            <ExternalLink className="w-3 h-3 ml-1" />
-                          </a>
-                        </li>
-                      ))}
-                    </ul>
                   </div>
                 )}
               </div>
@@ -356,26 +305,35 @@ const FindingCard: React.FC<{ finding: Finding; isExpanded: boolean; onToggle: (
               <div className="space-y-4">
                 {finding.evidence && (
                   <div>
-                    <h4 className="text-sm font-medium text-gray-700 mb-1">Evidence</h4>
-                    <pre className="text-sm bg-gray-900 text-gray-100 p-3 rounded overflow-x-auto">
+                    <h4 className="text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4 text-amber-500" />
+                      Evidence
+                    </h4>
+                    <pre className="text-sm bg-slate-900 text-slate-100 p-4 rounded-lg overflow-x-auto font-mono">
                       {finding.evidence}
                     </pre>
                   </div>
                 )}
                 {finding.request && (
                   <div>
-                    <h4 className="text-sm font-medium text-gray-700 mb-1">Request</h4>
-                    <pre className="text-sm bg-gray-900 text-gray-100 p-3 rounded overflow-x-auto">
+                    <h4 className="text-sm font-semibold text-slate-700 mb-2">Request</h4>
+                    <pre className="text-sm bg-slate-900 text-slate-100 p-4 rounded-lg overflow-x-auto font-mono">
                       {finding.request}
                     </pre>
                   </div>
                 )}
                 {finding.response && (
                   <div>
-                    <h4 className="text-sm font-medium text-gray-700 mb-1">Response</h4>
-                    <pre className="text-sm bg-gray-900 text-gray-100 p-3 rounded overflow-x-auto">
+                    <h4 className="text-sm font-semibold text-slate-700 mb-2">Response</h4>
+                    <pre className="text-sm bg-slate-900 text-slate-100 p-4 rounded-lg overflow-x-auto font-mono">
                       {finding.response}
                     </pre>
+                  </div>
+                )}
+                {!finding.evidence && !finding.request && !finding.response && (
+                  <div className="text-center py-8">
+                    <Info className="w-10 h-10 text-slate-300 mx-auto mb-2" />
+                    <p className="text-sm text-slate-500">No evidence data available</p>
                   </div>
                 )}
               </div>
@@ -384,24 +342,27 @@ const FindingCard: React.FC<{ finding: Finding; isExpanded: boolean; onToggle: (
             {activeTab === 'remediation' && (
               <div className="space-y-4">
                 {finding.remediation && (
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-700 mb-1">Recommendation</h4>
-                    <p className="text-sm text-gray-600">{finding.remediation}</p>
+                  <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+                    <h4 className="text-sm font-semibold text-emerald-800 mb-2 flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4" />
+                      Recommendation
+                    </h4>
+                    <p className="text-sm text-emerald-700">{finding.remediation}</p>
                   </div>
                 )}
                 {finding.codeExample && (
                   <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <h4 className="text-sm font-medium text-gray-700">Code Example</h4>
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-sm font-semibold text-slate-700">Code Example</h4>
                       <button
-                        onClick={() => navigator.clipboard.writeText(finding.codeExample || '')}
-                        className="text-xs text-gray-500 hover:text-gray-700 flex items-center"
+                        onClick={() => handleCopy(finding.codeExample || '')}
+                        className="text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1 px-2 py-1 hover:bg-slate-100 rounded"
                       >
-                        <Copy className="w-3 h-3 mr-1" />
-                        Copy
+                        <Copy className="w-3 h-3" />
+                        {copied ? 'Copied!' : 'Copy'}
                       </button>
                     </div>
-                    <pre className="text-sm bg-gray-900 text-gray-100 p-3 rounded overflow-x-auto">
+                    <pre className="text-sm bg-slate-900 text-slate-100 p-4 rounded-lg overflow-x-auto font-mono">
                       {finding.codeExample}
                     </pre>
                   </div>
@@ -411,13 +372,38 @@ const FindingCard: React.FC<{ finding: Finding; isExpanded: boolean; onToggle: (
           </div>
         </div>
       )}
+    </Card>
+  );
+};
+
+// Stat Card Component
+const StatCard: React.FC<{
+  label: string;
+  value: number;
+  severity?: 'critical' | 'high' | 'medium' | 'low' | 'info';
+}> = ({ label, value, severity }) => {
+  const colors = {
+    critical: 'bg-red-50 border-red-200 text-red-700',
+    high: 'bg-orange-50 border-orange-200 text-orange-700',
+    medium: 'bg-amber-50 border-amber-200 text-amber-700',
+    low: 'bg-blue-50 border-blue-200 text-blue-700',
+    info: 'bg-slate-50 border-slate-200 text-slate-700'
+  };
+
+  return (
+    <div className={clsx(
+      'rounded-xl border p-4 transition-transform hover:scale-[1.02]',
+      severity ? colors[severity] : 'bg-white border-slate-200'
+    )}>
+      <p className="text-sm font-medium opacity-80">{label}</p>
+      <p className="text-3xl font-bold mt-1">{value}</p>
     </div>
   );
 };
 
 export const ScanResults: React.FC = () => {
   const { scanId } = useParams();
-  const [findings, setFindings] = useState<Finding[]>(sampleFindings);
+  const [findings] = useState<Finding[]>(sampleFindings);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [filterSeverity, setFilterSeverity] = useState<string>('all');
   const [filterEngine, setFilterEngine] = useState<string>('all');
@@ -450,71 +436,53 @@ export const ScanResults: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <Link to="/" className="p-2 hover:bg-gray-100 rounded-lg">
-            <ArrowLeft className="w-5 h-5 text-gray-600" />
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <div className="flex items-center gap-4">
+          <Link to="/" className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-700 transition-colors">
+            <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Scan Results</h1>
-            <p className="text-gray-500">Scan ID: {scanId || 'demo'}</p>
+            <h1 className="text-2xl font-bold text-slate-900">Scan Results</h1>
+            <p className="text-slate-500 text-sm mt-0.5">Scan ID: {scanId || 'demo'}</p>
           </div>
         </div>
-        <div className="flex items-center space-x-3">
-          <button className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 flex items-center">
-            <Download className="w-4 h-4 mr-2" />
+        <div className="flex items-center gap-3">
+          <Button variant="secondary" leftIcon={<Download className="w-4 h-4" />}>
             Export PDF
-          </button>
-          <button className="px-4 py-2 text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 flex items-center">
-            <FileText className="w-4 h-4 mr-2" />
+          </Button>
+          <Button variant="primary" leftIcon={<FileText className="w-4 h-4" />}>
             Generate Report
-          </button>
+          </Button>
         </div>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-5 gap-4">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
-          <p className="text-sm text-gray-500">Total Findings</p>
-          <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
-        </div>
-        <div className="bg-red-50 rounded-lg border border-red-200 p-4">
-          <p className="text-sm text-red-600">Critical</p>
-          <p className="text-2xl font-bold text-red-700">{stats.critical}</p>
-        </div>
-        <div className="bg-orange-50 rounded-lg border border-orange-200 p-4">
-          <p className="text-sm text-orange-600">High</p>
-          <p className="text-2xl font-bold text-orange-700">{stats.high}</p>
-        </div>
-        <div className="bg-yellow-50 rounded-lg border border-yellow-200 p-4">
-          <p className="text-sm text-yellow-600">Medium</p>
-          <p className="text-2xl font-bold text-yellow-700">{stats.medium}</p>
-        </div>
-        <div className="bg-blue-50 rounded-lg border border-blue-200 p-4">
-          <p className="text-sm text-blue-600">Low</p>
-          <p className="text-2xl font-bold text-blue-700">{stats.low}</p>
-        </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+        <StatCard label="Total Findings" value={stats.total} />
+        <StatCard label="Critical" value={stats.critical} severity="critical" />
+        <StatCard label="High" value={stats.high} severity="high" />
+        <StatCard label="Medium" value={stats.medium} severity="medium" />
+        <StatCard label="Low" value={stats.low} severity="low" />
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
-        <div className="flex items-center space-x-4">
+      <Card className="bg-white">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search findings..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
             />
           </div>
-          <div className="flex items-center space-x-2">
-            <Filter className="w-4 h-4 text-gray-400" />
+          <div className="flex items-center gap-3">
             <select
               value={filterSeverity}
               onChange={(e) => setFilterSeverity(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
             >
               <option value="all">All Severities</option>
               <option value="CRITICAL">Critical</option>
@@ -525,7 +493,7 @@ export const ScanResults: React.FC = () => {
             <select
               value={filterEngine}
               onChange={(e) => setFilterEngine(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
             >
               <option value="all">All Engines</option>
               <option value="zap">ZAP</option>
@@ -534,24 +502,25 @@ export const ScanResults: React.FC = () => {
             </select>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Findings List */}
-      <div className="space-y-4">
+      <div className="space-y-3">
         {filteredFindings.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-12 text-center">
-            <CheckCircle className="w-12 h-12 mx-auto text-green-500 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No vulnerabilities found</h3>
-            <p className="text-gray-500">Great job! No issues match your current filters.</p>
-          </div>
+          <Card className="py-12 text-center">
+            <CheckCircle className="w-12 h-12 mx-auto text-emerald-500 mb-4" />
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">No vulnerabilities found</h3>
+            <p className="text-slate-500">Great job! No issues match your current filters.</p>
+          </Card>
         ) : (
-          filteredFindings.map((finding) => (
-            <FindingCard
-              key={finding.id}
-              finding={finding}
-              isExpanded={expandedId === finding.id}
-              onToggle={() => setExpandedId(expandedId === finding.id ? null : finding.id)}
-            />
+          filteredFindings.map((finding, index) => (
+            <div key={finding.id} className="animate-fade-in" style={{ animationDelay: `${index * 30}ms` }}>
+              <FindingCard
+                finding={finding}
+                isExpanded={expandedId === finding.id}
+                onToggle={() => setExpandedId(expandedId === finding.id ? null : finding.id)}
+              />
+            </div>
           ))
         )}
       </div>

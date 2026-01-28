@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate, useParams, Link } from 'react-router-dom';
+import { getProjects } from '../services/api';
+import type { Project } from '../types';
 import {
   Shield,
   Zap,
@@ -13,9 +15,11 @@ import {
   ChevronUp,
   AlertCircle,
   CheckCircle,
+  Target,
   Play,
   Info
 } from 'lucide-react';
+import api from '../services/api';
 
 type AuthMethod = 'none' | 'bearer_token' | 'basic_auth' | 'oauth2_client_credentials' | 'session_cookie' | 'api_key';
 type ScanType = 'quick' | 'standard' | 'full';
@@ -87,6 +91,11 @@ export const ScanConfig: React.FC = () => {
   const [isStarting, setIsStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [selectedProjectId, setSelectedProjectId] = useState<string>('');
+  const [loadingProjects, setLoadingProjects] = useState(false);
+
+  // Initialize config
   const [config, setConfig] = useState<ScanConfig>({
     targetUrl: '',
     specUrl: '',
@@ -100,6 +109,41 @@ export const ScanConfig: React.FC = () => {
     },
     customHeaders: ''
   });
+
+  // Fetch projects if no projectId param (Quick Scan mode)
+  React.useEffect(() => {
+    if (!projectId) {
+      const fetchProjects = async () => {
+        setLoadingProjects(true);
+        try {
+          const data = await getProjects();
+          setProjects(data);
+          if (data.length > 0) {
+            setSelectedProjectId(data[0].id);
+            // Pre-fill target URL from project
+            setConfig(prev => ({ ...prev, targetUrl: data[0].targetUrl || data[0].specUrl || '' }));
+          }
+        } catch (err) {
+          console.error(err);
+          setError('Failed to load projects');
+        } finally {
+          setLoadingProjects(false);
+        }
+      };
+      fetchProjects();
+    } else {
+      setSelectedProjectId(projectId);
+    }
+  }, [projectId]);
+
+  // Update target when project selection changes
+  const handleProjectChange = (id: string) => {
+    setSelectedProjectId(id);
+    const proj = projects.find(p => p.id === id);
+    if (proj) {
+      setConfig(prev => ({ ...prev, targetUrl: proj.targetUrl || proj.specUrl || '' }));
+    }
+  };
 
   const updateConfig = <K extends keyof ScanConfig>(key: K, value: ScanConfig[K]) => {
     setConfig(prev => ({ ...prev, [key]: value }));
@@ -123,6 +167,13 @@ export const ScanConfig: React.FC = () => {
   };
 
   const handleStartScan = async () => {
+    const activeProjectId = projectId || selectedProjectId;
+
+    if (!activeProjectId) {
+      setError('Please select a project');
+      return;
+    }
+
     if (!config.targetUrl) {
       setError('Target URL is required');
       return;
@@ -132,22 +183,15 @@ export const ScanConfig: React.FC = () => {
     setError(null);
 
     try {
-      // API call would go here
-      const response = await fetch('/api/scans', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          projectId,
-          ...config
-        })
+      const response = await api.post(`/projects/${activeProjectId}/scans`, {
+        projectId: activeProjectId,
+        ...config,
+        environment: localStorage.getItem('vulx_environment') || 'PRODUCTION'
       });
 
-      if (!response.ok) throw new Error('Failed to start scan');
-
-      const data = await response.json();
-      navigate(`/scans/${data.id}`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to start scan');
+      navigate(`/scans/${response.data.id}`);
+    } catch (err: any) {
+      setError(err.response?.data?.error || err.message || 'Failed to start scan');
     } finally {
       setIsStarting(false);
     }
@@ -166,6 +210,48 @@ export const ScanConfig: React.FC = () => {
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center space-x-3">
           <AlertCircle className="w-5 h-5 text-red-600" />
           <p className="text-red-700">{error}</p>
+        </div>
+      )}
+
+      {/* Project Selection (Visible only if no projectId in URL) */}
+      {!projectId && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <Target className="w-5 h-5 mr-2 text-indigo-600" />
+            Select Project
+          </h2>
+
+          {loadingProjects ? (
+            <div className="text-gray-500">Loading projects...</div>
+          ) : projects.length === 0 ? (
+            <div className="text-center py-4">
+              <p className="text-gray-500 mb-4">You need a project to start a scan.</p>
+              <Link
+                to="/new"
+                className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+              >
+                Create New Project
+              </Link>
+            </div>
+          ) : (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Project <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={selectedProjectId}
+                onChange={(e) => handleProjectChange(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              >
+                {projects.map(p => (
+                  <option key={p.id} value={p.id}>
+                    {p.name} ({p.targetUrl || 'No target defined'})
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-gray-500">Select which project this scan belongs to.</p>
+            </div>
+          )}
         </div>
       )}
 
@@ -225,11 +311,10 @@ export const ScanConfig: React.FC = () => {
             <button
               key={scanType.type}
               onClick={() => handleScanTypeChange(scanType.type)}
-              className={`p-4 rounded-lg border-2 text-left transition-all ${
-                config.scanType === scanType.type
-                  ? 'border-indigo-600 bg-indigo-50'
-                  : 'border-gray-200 hover:border-gray-300'
-              }`}
+              className={`p-4 rounded-lg border-2 text-left transition-all ${config.scanType === scanType.type
+                ? 'border-indigo-600 bg-indigo-50'
+                : 'border-gray-200 hover:border-gray-300'
+                }`}
             >
               <div className="flex items-center justify-between mb-2">
                 <span className="font-semibold text-gray-900">{scanType.name}</span>
@@ -272,11 +357,10 @@ export const ScanConfig: React.FC = () => {
             <button
               key={auth.method}
               onClick={() => updateConfig('authMethod', auth.method)}
-              className={`p-3 rounded-lg border text-left transition-all flex items-center space-x-2 ${
-                config.authMethod === auth.method
-                  ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
-                  : 'border-gray-200 hover:border-gray-300 text-gray-700'
-              }`}
+              className={`p-3 rounded-lg border text-left transition-all flex items-center space-x-2 ${config.authMethod === auth.method
+                ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
+                : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                }`}
             >
               {auth.icon}
               <span className="text-sm font-medium">{auth.name}</span>

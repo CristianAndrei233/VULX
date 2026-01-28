@@ -238,3 +238,11 @@ export interface CLICommand {
   timestamp: string;
   status: 'running' | 'success' | 'error';
 }
+
+export interface ApiKey {
+  id: string;
+  key: string; // Usually masked in list, full on creation
+  type: 'SANDBOX' | 'PRODUCTION';
+  projectId: string;
+  createdAt: string;
+}

@@ -1,7 +1,7 @@
+
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   Terminal,
-  X,
   Maximize2,
   Minimize2,
   Copy,
@@ -369,9 +369,8 @@ export const CLITerminal: React.FC = () => {
       <div
         ref={terminalRef}
         onClick={handleTerminalClick}
-        className={`flex-1 bg-gray-900 p-4 overflow-y-auto font-mono text-sm ${
-          isFullscreen ? '' : 'rounded-b-lg'
-        }`}
+        className={`flex-1 bg-gray-900 p-4 overflow-y-auto font-mono text-sm ${isFullscreen ? '' : 'rounded-b-lg'
+          }`}
         style={{ minHeight: '400px' }}
       >
         {lines.map((line) => (

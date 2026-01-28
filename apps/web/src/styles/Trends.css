@@ -1,0 +1,288 @@
+.trends-page {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.trends-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.trends-header h1 {
+  margin: 0 0 0.5rem;
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #1F2937;
+}
+
+.trends-header p {
+  color: #6B7280;
+  margin: 0;
+}
+
+.trends-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 300px;
+  color: #6B7280;
+}
+
+/* Period Selector */
+.period-selector {
+  display: flex;
+  gap: 0.5rem;
+  background: #F3F4F6;
+  padding: 0.25rem;
+  border-radius: 8px;
+}
+
+.period-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  background: transparent;
+  color: #6B7280;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.period-btn:hover {
+  color: #1F2937;
+}
+
+.period-btn.active {
+  background: white;
+  color: #6366F1;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Summary Grid */
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.summary-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid #E5E7EB;
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.summary-icon {
+  font-size: 2rem;
+}
+
+.summary-content {
+  flex: 1;
+}
+
+.summary-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1F2937;
+}
+
+.summary-label {
+  font-size: 0.85rem;
+  color: #6B7280;
+  margin-top: 0.25rem;
+}
+
+.summary-trend {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
+}
+
+/* Velocity Section */
+.velocity-section {
+  margin-bottom: 2rem;
+}
+
+.velocity-section h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1F2937;
+  margin: 0 0 1rem;
+}
+
+.velocity-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.velocity-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.25rem;
+  border: 1px solid #E5E7EB;
+  text-align: center;
+}
+
+.velocity-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #6366F1;
+}
+
+.velocity-label {
+  font-size: 0.8rem;
+  color: #6B7280;
+  margin-top: 0.25rem;
+}
+
+.velocity-progress {
+  margin-top: 0.75rem;
+  height: 6px;
+  background: #F3F4F6;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.velocity-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #6366F1, #8B5CF6);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+/* Chart Sections */
+.chart-section {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid #E5E7EB;
+  margin-bottom: 2rem;
+}
+
+.chart-section h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1F2937;
+  margin: 0 0 1rem;
+}
+
+/* Simple Bar Chart */
+.simple-chart {
+  height: 200px;
+  padding-top: 1rem;
+}
+
+.chart-bars {
+  display: flex;
+  align-items: flex-end;
+  height: 100%;
+  gap: 0.5rem;
+}
+
+.chart-bar-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+}
+
+.chart-bar {
+  width: 100%;
+  max-width: 40px;
+  border-radius: 4px 4px 0 0;
+  transition: height 0.3s ease;
+  margin-bottom: 0.5rem;
+}
+
+.chart-label {
+  font-size: 0.65rem;
+  color: #9CA3AF;
+  transform: rotate(-45deg);
+  white-space: nowrap;
+}
+
+/* Stacked Chart */
+.severity-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: #6B7280;
+}
+
+.legend-item .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.stacked-chart {
+  display: flex;
+  align-items: flex-end;
+  height: 200px;
+  gap: 0.5rem;
+}
+
+.stacked-bar-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+}
+
+.stacked-bar {
+  width: 100%;
+  max-width: 40px;
+  border-radius: 4px 4px 0 0;
+  display: flex;
+  flex-direction: column-reverse;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.stack-segment {
+  min-height: 2px;
+}
+
+/* Empty State */
+.empty-trends {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: white;
+  border-radius: 12px;
+  border: 1px dashed #E5E7EB;
+}
+
+.empty-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.empty-trends h3 {
+  margin: 0 0 0.5rem;
+  color: #1F2937;
+}
+
+.empty-trends p {
+  color: #6B7280;
+  margin: 0;
+}

@@ -2,11 +2,25 @@ import axios from 'axios';
 import type { Project, Scan } from '../types';
 
 const api = axios.create({
-  baseURL: 'http://localhost:3001',
+  baseURL: '/api', // Use relative path to leverage Vite proxy
 });
 
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  
+  const env = localStorage.getItem('vulx_environment') || 'PRODUCTION';
+  config.headers['X-VULX-ENVIRONMENT'] = env;
+  
+  return config;
+});
+
+// No changes needed for method bodies as they use relative paths like '/projects'
+// which will now map to '/api/projects' correctly.
 export const getProjects = async () => {
-  const response = await api.get<Project[]>('/projects'); // Assuming backend list endpoint exists or we use org
+  const response = await api.get<Project[]>('/projects');
   // Correction: We don't have a list-all endpoint yet, only get-by-id.
   // We should add one, or use a hardcoded list for now?
   // Let's implement getting a specific project for now or mock the list.
@@ -36,6 +50,20 @@ export const updateProject = async (id: string, data: Partial<Project>) => {
 
 export const deleteProject = async (id: string) => {
   await api.delete(`/projects/${id}`);
+};
+
+export const getApiKeys = async (projectId: string) => {
+  const response = await api.get<any[]>(`/projects/${projectId}/keys`);
+  return response.data;
+};
+
+export const generateApiKey = async (projectId: string, environment: 'SANDBOX' | 'PRODUCTION') => {
+  const response = await api.post<any>(`/projects/${projectId}/keys`, { environment });
+  return response.data;
+};
+
+export const deleteApiKey = async (projectId: string, keyId: string) => {
+  await api.delete(`/projects/${projectId}/keys/${keyId}`);
 };
 
 export default api;

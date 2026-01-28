@@ -109,6 +109,20 @@ def process_scan(scan_id: str, spec_content: str):
         )
         conn.commit()
 
+        # Trigger notifications for scan completion
+        try:
+            import urllib.request
+            api_url = os.environ.get('API_URL', 'http://localhost:3001')
+            req = urllib.request.Request(
+                f"{api_url}/api/internal/notify-scan-complete",
+                data=json.dumps({'scanId': scan_id}).encode('utf-8'),
+                headers={'Content-Type': 'application/json'}
+            )
+            urllib.request.urlopen(req, timeout=5)
+            print(f"[SCAN] Notification triggered for scan {scan_id}")
+        except Exception as notify_error:
+            print(f"[SCAN] Warning: Failed to trigger notification: {notify_error}")
+
         print(f"[SCAN] Scan {scan_id} completed successfully with {len(findings)} findings")
 
     except Exception as e:

@@ -1,74 +1,131 @@
-import React, { useState } from 'react';
-import { Link, Outlet, useNavigate } from 'react-router-dom';
-import { Shield, LayoutDashboard, Plus, CreditCard, User, LogOut, Settings } from 'lucide-react';
+import { useState } from 'react';
+import { Outlet, Link, useLocation } from 'react-router-dom';
+import {
+    LayoutDashboard,
+    Scan,
+    Settings,
+    Shield,
+    Menu,
+    X,
+    LogOut,
+    User,
+    Terminal
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { clsx } from 'clsx'; // Ideally import from tailwind-merge util if available
 
-export const Layout: React.FC = () => {
-    const { user, logout } = useAuth();
-    const navigate = useNavigate();
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
+const NAV_ITEMS = [
+    { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
+    { label: 'Projects', icon: Shield, path: '/projects' },
+    { label: 'Scans', icon: Scan, path: '/scans' },
+    { label: 'Remediation', icon: Shield, path: '/remediation' },
+    { label: 'Trends', icon: Terminal, path: '/trends' },
+    { label: 'Settings', icon: Settings, path: '/settings' },
+];
 
-    const handleLogout = () => {
-        logout();
-        navigate('/login');
-    };
+export const Layout = () => {
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const location = useLocation();
+    const { logout, user } = useAuth();
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <nav className="bg-white border-b border-gray-200">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between h-16">
-                        <div className="flex">
-                            <Link to="/" className="flex-shrink-0 flex items-center">
-                                <Shield className="h-8 w-8 text-indigo-600" />
-                                <span className="ml-2 text-xl font-bold text-gray-900">VULX</span>
-                            </Link>
-                            <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                                <Link to="/" className="inline-flex items-center px-1 pt-1 border-b-2 border-indigo-500 text-sm font-medium text-gray-900">
-                                    <LayoutDashboard className="w-4 h-4 mr-2" />
-                                    Dashboard
-                                </Link>
-                                <Link to="/new" className="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 text-sm font-medium">
-                                    <Plus className="w-4 h-4 mr-2" />
-                                    New Project
-                                </Link>
-                                <Link to="/billing" className="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 text-sm font-medium">
-                                    <CreditCard className="w-4 h-4 mr-2" />
-                                    Billing
-                                </Link>
-                                {user?.role === 'ADMIN' && (
-                                    <Link to="/admin" className="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-purple-600 hover:text-purple-800 text-sm font-medium">
-                                        <Settings className="w-4 h-4 mr-2" />
-                                        Admin
-                                    </Link>
-                                )}
-                            </div>
+        <div className="flex h-screen bg-paper text-slate-900 font-sans">
+            {/* Mobile Sidebar Overlay */}
+            {sidebarOpen && (
+                <div
+                    className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+                    onClick={() => setSidebarOpen(false)}
+                />
+            )}
+
+            {/* Sidebar - Iron Forest Theme */}
+            <aside
+                className={clsx(
+                    "fixed inset-y-0 left-0 z-50 w-64 bg-iron text-paper transition-transform duration-300 transform lg:translate-x-0 lg:static flex flex-col border-r border-iron-active",
+                    sidebarOpen ? "translate-x-0" : "-translate-x-full"
+                )}
+            >
+                {/* Logo Area */}
+                <div className="h-16 flex items-center px-6 border-b border-iron-active/50">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded bg-clay flex items-center justify-center font-bold text-white shadow-hard-sm">
+                            V
                         </div>
-                        <div className="hidden sm:ml-6 sm:flex sm:items-center">
-                            <div className="ml-3 relative">
-                                <div className="flex items-center space-x-4">
-                                    <Link to="/profile" className="flex items-center text-sm font-medium text-gray-700 hover:text-gray-900">
-                                        <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-800">
-                                            {user?.name?.[0]?.toUpperCase() || <User className="w-4 h-4" />}
-                                        </div>
-                                        <span className="ml-2">{user?.name}</span>
-                                    </Link>
-                                    <button
-                                        onClick={handleLogout}
-                                        className="p-1 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none"
-                                        title="Logout"
-                                    >
-                                        <LogOut className="w-5 h-5" />
-                                    </button>
-                                </div>
-                            </div>
+                        <span className="text-lg font-bold tracking-tight">VULX</span>
+                    </div>
+                    <button
+                        className="ml-auto lg:hidden text-slate-400 hover:text-white"
+                        onClick={() => setSidebarOpen(false)}
+                    >
+                        <X className="w-5 h-5" />
+                    </button>
+                </div>
+
+                {/* Navigation */}
+                <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
+                    {NAV_ITEMS.map((item) => {
+                        const isActive = location.pathname.startsWith(item.path);
+                        const Icon = item.icon;
+
+                        return (
+                            <Link
+                                key={item.path}
+                                to={item.path}
+                                className={clsx(
+                                    "flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-md transition-colors",
+                                    isActive
+                                        ? "bg-iron-hover text-white shadow-sm border-l-2 border-clay"
+                                        : "text-slate-400 hover:text-white hover:bg-iron-hover/50"
+                                )}
+                            >
+                                <Icon className={clsx("w-5 h-5", isActive ? "text-clay" : "text-slate-500 group-hover:text-slate-300")} />
+                                {item.label}
+                            </Link>
+                        );
+                    })}
+                </nav>
+
+                {/* User Footer */}
+                <div className="p-4 border-t border-iron-active/50 bg-iron-active/20">
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="w-8 h-8 rounded-full bg-iron-hover flex items-center justify-center border border-iron-active">
+                            <User className="w-4 h-4 text-slate-300" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-white truncate">{user?.name || 'User'}</p>
+                            <p className="text-xs text-slate-500 truncate">{user?.email}</p>
                         </div>
                     </div>
+                    <button
+                        onClick={logout}
+                        className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-slate-400 hover:text-white hover:bg-iron-hover rounded-md transition-colors"
+                    >
+                        <LogOut className="w-3.5 h-3.5" />
+                        Sign Out
+                    </button>
                 </div>
-            </nav>
+            </aside>
 
-            <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-                <Outlet />
+            {/* Main Content Area */}
+            <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-paper">
+                {/* Mobile Header */}
+                <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 lg:hidden">
+                    <button
+                        onClick={() => setSidebarOpen(true)}
+                        className="p-2 -ml-2 text-slate-600 hover:bg-gray-100 rounded-md"
+                    >
+                        <Menu className="w-6 h-6" />
+                    </button>
+                    <div className="font-bold text-slate-900">VULX</div>
+                    <div className="w-8" /> {/* Spacer */}
+                </header>
+
+                {/* Content Scroller */}
+                <div className="flex-1 overflow-auto p-4 md:p-8">
+                    <div className="max-w-7xl mx-auto animate-fade-in">
+                        <Outlet />
+                    </div>
+                </div>
             </main>
         </div>
     );

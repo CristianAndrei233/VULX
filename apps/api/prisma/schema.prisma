@@ -18,7 +18,7 @@ model User {
   name                String?
   stripeCustomerId    String?       @unique
   onboardingCompleted Boolean       @default(false)
-  apiKey              String?       @unique  // For programmatic access
+  // apiKey              String?       @unique  // DEPRECATED: Moved to Project
   createdAt           DateTime      @default(now())
   updatedAt           DateTime      @updatedAt
   organizationId      String?
@@ -39,7 +39,7 @@ model Subscription {
   user                 User     @relation(fields: [userId], references: [id])
   stripeSubscriptionId String   @unique
   stripePriceId        String
-  status               String   // active, canceled, past_due, trialing, incomplete
+  status               String // active, canceled, past_due, trialing, incomplete
   planId               String
   plan                 Plan     @relation(fields: [planId], references: [id])
   currentPeriodStart   DateTime
@@ -51,10 +51,10 @@ model Subscription {
 
 model Plan {
   id            String         @id @default(uuid())
-  name          String         // Free, Pro, Enterprise
+  name          String // Free, Pro, Enterprise
   stripePriceId String         @unique
-  price         Int            // in cents
-  interval      String         // month, year
+  price         Int // in cents
+  interval      String // month, year
   scansPerMonth Int
   projectLimit  Int
   features      String[]
@@ -65,13 +65,47 @@ model Plan {
 }
 
 model Organization {
-  id           String       @id @default(uuid())
+  id           String              @id @default(uuid())
   name         String
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
   projects     Project[]
   users        User[]
   authConfigs  AuthConfig[]
+  integrations IntegrationConfig[]
+  customRules  CustomRule[]
+}
+
+// ============================================
+// Integrations (Slack, Discord, Teams, Jira, Linear)
+// ============================================
+
+model IntegrationConfig {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  type String // slack, discord, teams, jira, linear
+  name String // User-friendly name
+
+  // Webhook-based (Slack, Discord, Teams)
+  webhookUrl String? @db.Text
+
+  // OAuth-based (Jira, Linear)
+  accessToken  String? @db.Text
+  refreshToken String? @db.Text
+  externalUrl  String? // e.g., Jira instance URL
+
+  // Configuration
+  settings Json?    // Provider-specific settings
+  events   String[] @default(["scan_completed", "critical_finding"])
+  isActive Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([type])
 }
 
 // ============================================
@@ -79,22 +113,23 @@ model Organization {
 // ============================================
 
 model Project {
-  id             String        @id @default(uuid())
+  id             String         @id @default(uuid())
   name           String
   description    String?
-  targetUrl      String?       // Base URL for scanning
-  specUrl        String?       // OpenAPI spec URL
-  specContent    String?       @db.Text
+  targetUrl      String? // Base URL for scanning
+  specUrl        String? // OpenAPI spec URL
+  specContent    String?        @db.Text
   organizationId String
-  organization   Organization  @relation(fields: [organizationId], references: [id])
+  organization   Organization   @relation(fields: [organizationId], references: [id])
   scans          Scan[]
   schedules      ScanSchedule[]
-  authConfigId   String?       // Default auth config for scans
-  authConfig     AuthConfig?   @relation(fields: [authConfigId], references: [id])
-  scanFrequency  ScanFrequency @default(MANUAL)
+  authConfigId   String? // Default auth config for scans
+  authConfig     AuthConfig?    @relation(fields: [authConfigId], references: [id])
+  scanFrequency  ScanFrequency  @default(MANUAL)
   nextScanAt     DateTime?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  apiKeys        ApiKey[] // [NEW] Multi-environment keys
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 
   @@index([organizationId])
 }
@@ -112,37 +147,37 @@ enum ScanFrequency {
 model AuthConfig {
   id             String       @id @default(uuid())
   name           String
-  method         String       // bearer_token, basic_auth, oauth2_client_credentials, session_cookie, api_key
+  method         String // bearer_token, basic_auth, oauth2_client_credentials, session_cookie, api_key
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id])
 
   // Bearer/API Key
-  bearerToken    String?      @db.Text
-  apiKeyHeader   String?      @default("X-API-Key")
-  apiKeyValue    String?      @db.Text
+  bearerToken  String? @db.Text
+  apiKeyHeader String? @default("X-API-Key")
+  apiKeyValue  String? @db.Text
 
   // Basic Auth
-  username       String?
-  password       String?      @db.Text
+  username String?
+  password String? @db.Text
 
   // OAuth2
   oauth2ClientId     String?
-  oauth2ClientSecret String?  @db.Text
+  oauth2ClientSecret String? @db.Text
   oauth2TokenUrl     String?
   oauth2Scope        String?
 
   // Session/Cookie
-  loginUrl       String?
-  loginBody      Json?
+  loginUrl          String?
+  loginBody         Json?
   sessionCookieName String?
 
   // Custom Headers
-  customHeaders  Json?        // { "Header-Name": "value" }
+  customHeaders Json? // { "Header-Name": "value" }
 
-  isActive       Boolean      @default(true)
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-  projects       Project[]
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  projects  Project[]
 
   @@index([organizationId])
 }
@@ -152,43 +187,44 @@ model AuthConfig {
 // ============================================
 
 model Scan {
-  id            String    @id @default(uuid())
-  projectId     String
-  project       Project   @relation(fields: [projectId], references: [id])
-  status        String    @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
-  scanType      String    @default("standard") // quick, standard, full
+  id          String      @id @default(uuid())
+  projectId   String
+  project     Project     @relation(fields: [projectId], references: [id])
+  status      String      @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
+  scanType    String      @default("standard") // quick, standard, full
+  environment Environment @default(PRODUCTION) // [NEW]
 
   // Scan metadata
-  targetUrl     String?
-  startedAt     DateTime  @default(now())
-  completedAt   DateTime?
-  durationSecs  Int?
+  targetUrl    String?
+  startedAt    DateTime  @default(now())
+  completedAt  DateTime?
+  durationSecs Int?
 
   // Results
-  findings      Finding[]
-  riskScore     Int?      @default(0)
+  findings  Finding[]
+  riskScore Int?      @default(0)
 
   // Engine information
-  enginesUsed   String[]  @default([])
-  authMethod    String?
+  enginesUsed String[] @default([])
+  authMethod  String?
 
   // Trigger information
-  triggeredBy   String?   // user, schedule, ci_cd, api
-  triggeredById String?   // User ID or schedule ID
+  triggeredBy   String? // user, schedule, ci_cd, api
+  triggeredById String? // User ID or schedule ID
 
   // CI/CD metadata
-  ciProvider    String?   // github_actions, gitlab_ci, jenkins, etc.
+  ciProvider    String? // github_actions, gitlab_ci, jenkins, etc.
   commitSha     String?
   branchName    String?
   pullRequestId String?
 
   // Summary (cached for quick access)
-  findingsCount Json?     // { "CRITICAL": 0, "HIGH": 0, ... }
+  findingsCount Json? // { "CRITICAL": 0, "HIGH": 0, ... }
 
   // Notifications
   notificationSent Boolean @default(false)
 
-  createdAt     DateTime  @default(now())
+  createdAt DateTime @default(now())
 
   @@index([projectId])
   @@index([status])
@@ -196,52 +232,82 @@ model Scan {
 }
 
 model Finding {
-  id            String   @id @default(uuid())
-  scanId        String
-  scan          Scan     @relation(fields: [scanId], references: [id], onDelete: Cascade)
+  id     String @id @default(uuid())
+  scanId String
+  scan   Scan   @relation(fields: [scanId], references: [id], onDelete: Cascade)
 
   // Finding details
-  engine        String   @default("owasp_scanner") // owasp_scanner, nuclei, zap, schemathesis
-  type          String   // e.g., BOLA, SQL_INJECTION, XSS
-  severity      String   // CRITICAL, HIGH, MEDIUM, LOW, INFO
-  confidence    String   @default("MEDIUM") // HIGH, MEDIUM, LOW
-  title         String   @default("")
-  description   String   @db.Text
+  engine      String      @default("owasp_scanner") // owasp_scanner, nuclei, zap, schemathesis
+  type        String // e.g., BOLA, SQL_INJECTION, XSS
+  severity    String // CRITICAL, HIGH, MEDIUM, LOW, INFO
+  confidence  String      @default("MEDIUM") // HIGH, MEDIUM, LOW
+  environment Environment @default(PRODUCTION) // [NEW] Inherited from Scan
+  title       String      @default("")
+  description String      @db.Text
 
   // Location
-  endpoint      String
-  method        String
-  parameter     String?
+  endpoint  String
+  method    String
+  parameter String?
 
   // Evidence
-  evidence      String?  @db.Text
-  request       String?  @db.Text
-  response      String?  @db.Text
+  evidence String? @db.Text
+  request  String? @db.Text
+  response String? @db.Text
 
   // Remediation
-  remediation   String?  @db.Text
-  codeExample   String?  @db.Text
+  remediation String? @db.Text
+  codeExample String? @db.Text
 
   // Classification
-  owaspCategory String?  // e.g., "API1:2023 - Broken Object Level Authorization"
-  cweId         String?  // e.g., "CWE-639"
-  cveId         String?  // e.g., "CVE-2024-1234"
+  owaspCategory String? // e.g., "API1:2023 - Broken Object Level Authorization"
+  cweId         String? // e.g., "CWE-639"
+  cveId         String? // e.g., "CVE-2024-1234"
   cvssScore     Float?
 
   // Compliance
   complianceMappings Json? // { "soc2": ["CC6.1"], "pci_dss": ["6.5.1"] }
 
   // Status tracking
-  status        String   @default("OPEN") // OPEN, ACCEPTED, FIXED, FALSE_POSITIVE
-  fixedAt       DateTime?
-  fixedInScanId String?
+  status          String    @default("OPEN") // OPEN, IN_PROGRESS, ACCEPTED, FIXED, FALSE_POSITIVE
+  fixedAt         DateTime?
+  fixedInScanId   String?
+  resolvedBy      String? // User ID who resolved
+  resolvedAt      DateTime?
+  resolutionNotes String?   @db.Text
+  assignedTo      String? // User ID assigned to fix
+  dueDate         DateTime?
 
-  references    String[] @default([])
-  createdAt     DateTime @default(now())
+  // External ticket integration
+  externalTicketId     String?
+  externalTicketUrl    String?
+  externalTicketStatus String?
+
+  // History tracking
+  history FindingHistory[]
+
+  references String[] @default([])
+  createdAt  DateTime @default(now())
 
   @@index([scanId])
   @@index([severity])
   @@index([status])
+}
+
+model FindingHistory {
+  id        String  @id @default(uuid())
+  findingId String
+  finding   Finding @relation(fields: [findingId], references: [id], onDelete: Cascade)
+
+  action    String // status_changed, assigned, note_added, ticket_created
+  fromValue String?
+  toValue   String?
+  userId    String
+  notes     String? @db.Text
+
+  createdAt DateTime @default(now())
+
+  @@index([findingId])
 }
 
 // ============================================
@@ -249,30 +315,30 @@ model Finding {
 // ============================================
 
 model ScanSchedule {
-  id            String    @id @default(uuid())
-  projectId     String
-  project       Project   @relation(fields: [projectId], references: [id])
+  id        String  @id @default(uuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id])
 
-  name          String
-  description   String?
+  name        String
+  description String?
 
   // Schedule configuration
-  cronExpression String   // e.g., "0 0 * * *" for daily
-  timezone       String   @default("UTC")
-  scanType       String   @default("standard") // quick, standard, full
+  cronExpression String // e.g., "0 0 * * *" for daily
+  timezone       String @default("UTC")
+  scanType       String @default("standard") // quick, standard, full
 
-  isActive       Boolean  @default(true)
-  lastRunAt      DateTime?
-  nextRunAt      DateTime?
+  isActive  Boolean   @default(true)
+  lastRunAt DateTime?
+  nextRunAt DateTime?
 
   // Notification settings
-  notifyOnFindings Boolean @default(true)
-  notifySeverity   String  @default("HIGH") // Minimum severity to notify
+  notifyOnFindings Boolean  @default(true)
+  notifySeverity   String   @default("HIGH") // Minimum severity to notify
   notifyEmails     String[] @default([])
   slackWebhookUrl  String?
 
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([projectId])
   @@index([isActive])
@@ -283,28 +349,29 @@ model ScanSchedule {
 // ============================================
 
 model Alert {
-  id          String   @id @default(uuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 
-  type        String   // new_finding, scan_complete, scan_failed, threshold_exceeded
-  severity    String   // CRITICAL, HIGH, MEDIUM, LOW, INFO
+  type        String // new_finding, scan_complete, scan_failed, threshold_exceeded
+  severity    String // CRITICAL, HIGH, MEDIUM, LOW, INFO
+  environment Environment @default(PRODUCTION) // [NEW]
   title       String
-  message     String   @db.Text
+  message     String      @db.Text
 
   // Related entities
-  projectId   String?
-  scanId      String?
-  findingId   String?
+  projectId String?
+  scanId    String?
+  findingId String?
 
-  isRead      Boolean  @default(false)
-  readAt      DateTime?
+  isRead Boolean   @default(false)
+  readAt DateTime?
 
   // Delivery tracking
-  emailSent   Boolean  @default(false)
-  slackSent   Boolean  @default(false)
+  emailSent Boolean @default(false)
+  slackSent Boolean @default(false)
 
-  createdAt   DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@index([userId])
   @@index([isRead])
@@ -316,20 +383,20 @@ model Alert {
 // ============================================
 
 model ComplianceReport {
-  id          String   @id @default(uuid())
-  scanId      String
-  framework   String   // soc2, pci_dss, hipaa, gdpr, iso_27001
+  id        String @id @default(uuid())
+  scanId    String
+  framework String // soc2, pci_dss, hipaa, gdpr, iso_27001
 
   // Report data
-  status      String   // compliant, non_compliant, partial
-  score       Int?     // 0-100
+  status String // compliant, non_compliant, partial
+  score  Int? // 0-100
 
-  controlsTotal    Int
-  controlsPassed   Int
-  controlsFailed   Int
+  controlsTotal  Int
+  controlsPassed Int
+  controlsFailed Int
 
   // Detailed mappings
-  controlDetails   Json  // Array of { controlId, status, findings[] }
+  controlDetails Json // Array of { controlId, status, findings[] }
 
   generatedAt DateTime @default(now())
 
@@ -342,18 +409,113 @@ model ComplianceReport {
 // ============================================
 
 model UsageRecord {
-  id          String   @id @default(uuid())
-  userId      String
-  action      String   // scan_started, report_generated, api_call
+  id     String @id @default(uuid())
+  userId String
+  action String // scan_started, report_generated, api_call
 
   // Metadata
-  projectId   String?
-  scanId      String?
-  metadata    Json?
+  projectId String?
+  scanId    String?
+  metadata  Json?
 
-  createdAt   DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@index([userId])
   @@index([action])
   @@index([createdAt])
+}
+
+// ============================================
+// Multi-Environment Configuration
+// ============================================
+
+enum Environment {
+  SANDBOX
+  PRODUCTION
+}
+
+model ApiKey {
+  id        String      @id @default(uuid())
+  key       String      @unique // v_test_... or v_live_...
+  type      Environment
+  projectId String
+  project   Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  permissions Json? // Scopes/permissions
+  isActive    Boolean   @default(true)
+  lastUsedAt  DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([projectId])
+  @@index([key])
+}
+
+// ============================================
+// Historical Trending & Security Snapshots
+// ============================================
+
+model SecuritySnapshot {
+  id             String  @id @default(uuid())
+  organizationId String
+  projectId      String? // null = org-wide
+
+  date DateTime @db.Date
+
+  // Metrics
+  totalFindings Int
+  criticalCount Int
+  highCount     Int
+  mediumCount   Int
+  lowCount      Int
+  infoCount     Int
+
+  openCount  Int
+  fixedCount Int
+
+  riskScore Int
+
+  // Velocity metrics
+  newFindings   Int  // Found since last snapshot
+  resolvedCount Int  // Fixed since last snapshot
+  mttr          Int? // Mean time to remediate (hours)
+
+  createdAt DateTime @default(now())
+
+  @@unique([organizationId, projectId, date])
+  @@index([organizationId])
+  @@index([projectId])
+  @@index([date])
+}
+
+// ============================================
+// Custom Scan Rules
+// ============================================
+
+model CustomRule {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  name        String
+  description String?
+
+  // Rule definition
+  type     String // path_pattern, parameter_pattern, response_pattern, header_pattern
+  pattern  String // Regex pattern
+  location String // endpoint, parameter, request_body, response, header
+
+  // Finding details when matched
+  severity           String // CRITICAL, HIGH, MEDIUM, LOW, INFO
+  title              String
+  findingDescription String  @db.Text
+  remediation        String? @db.Text
+  owaspCategory      String?
+  cweId              String?
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([isActive])
 }

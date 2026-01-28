@@ -55,7 +55,12 @@ app.use(express.json());
 import authRoutes from './routes/auth';
 import projectRoutes from './routes/projects';
 import billingRoutes from './routes/billing';
+import integrationRoutes from './routes/integrations';
+import remediationRoutes from './routes/remediation';
+import trendsRoutes from './routes/trends';
+import rulesRoutes from './routes/rules';
 import { authenticateToken } from './middleware/auth';
+import { environmentMiddleware } from './middleware/environment';
 
 // Swagger UI documentation endpoint
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openApiSpec, swaggerOptions));
@@ -74,9 +79,33 @@ app.get('/api-docs.yaml', (req, res) => {
 // Use raw body for Stripe webhooks
 app.use('/billing/webhook', express.raw({ type: 'application/json' }));
 
-app.use('/auth', authRoutes);
-app.use('/projects', authenticateToken, projectRoutes);
-app.use('/billing', authenticateToken, billingRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/projects', authenticateToken, environmentMiddleware, projectRoutes);
+app.use('/api/billing', authenticateToken, billingRoutes);
+app.use('/api/integrations', authenticateToken, integrationRoutes);
+app.use('/api/remediation', authenticateToken, remediationRoutes);
+app.use('/api/trends', authenticateToken, trendsRoutes);
+app.use('/api/rules', authenticateToken, rulesRoutes);
+
+// Import and register tickets routes
+import ticketsRoutes from './routes/tickets';
+app.use('/api/tickets', authenticateToken, ticketsRoutes);
+
+// Internal endpoint for scan completion notifications (called by worker)
+import { notifyScanComplete } from './services/notifications';
+app.post('/api/internal/notify-scan-complete', async (req, res) => {
+  const { scanId } = req.body;
+  if (!scanId) {
+    return res.status(400).json({ error: 'scanId is required' });
+  }
+  try {
+    await notifyScanComplete(scanId);
+    res.json({ success: true });
+  } catch (error: any) {
+    console.error('Notification error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'vulx-api' });

@@ -29,6 +29,14 @@ export default defineConfig({
           ]
         },
         {
+          text: 'Using VULX',
+          items: [
+            { text: 'Web Interface Guide', link: '/guide/web-interface' },
+            { text: 'Multi-Environment Setup', link: '/guide/environments' },
+            { text: 'API Integration', link: '/guide/api-integration' }
+          ]
+        },
+        {
           text: 'Features',
           items: [
             { text: 'Vulnerability Detection', link: '/guide/vulnerability-detection' },

@@ -86,99 +86,154 @@ def process_scan(scan_id: str, spec_content: str):
 
         print(f"[SCAN] Severity breakdown: {severity_counts}")
 
-        # --- DEDUPLICATION LOGIC ---
-        # Fetch findings from the most recent completed scan to preserve state
-        previous_states = {} # (type, method, endpoint) -> { status, notes, assignedTo }
-        
+        # --- ROBUST DEDUPLICATION LOGIC ---
+        # Fetch findings from ALL previous completed scans for this project+environment
+        # This ensures we never duplicate findings and properly track their lifecycle
+        previous_findings = {}  # (type, method, endpoint) -> { id, status, notes, assignedTo, scanId }
+
         if project_id:
             try:
-                # Find the last completed scan for this project and environment
+                # Find ALL findings for this project+environment across all scans
+                # We use the most recent state of each unique finding
                 cur.execute("""
-                    SELECT id FROM "Scan" 
-                    WHERE "projectId" = %s 
-                      AND environment = %s
-                      AND status = 'COMPLETED'
-                      AND id != %s
-                    ORDER BY "createdAt" DESC 
-                    LIMIT 1
-                """, (project_id, environment, scan_id))
-                
-                last_scan_row = cur.fetchone()
-                
-                if last_scan_row:
-                    last_scan_id = last_scan_row[0]
-                    print(f"[SCAN] found previous scan {last_scan_id}, inheriting finding states...")
-                    
-                    cur.execute("""
-                        SELECT type, method, endpoint, status, "resolutionNotes", "assignedTo"
-                        FROM "Finding"
-                        WHERE "scanId" = %s
-                    """, (last_scan_id,))
-                    
-                    for r in cur.fetchall():
-                        # Key: type, method, endpoint
-                        # Ensure method is normalized (e.g., uppercase)
-                        key = (r[0], r[1].upper() if r[1] else '', r[2])
-                        previous_states[key] = {
-                            'status': r[3],
-                            'resolutionNotes': r[4],
-                            'assignedTo': r[5]
-                        }
+                    SELECT DISTINCT ON (f.type, f.method, f.endpoint)
+                        f.id, f.type, f.method, f.endpoint, f.status,
+                        f."resolutionNotes", f."assignedTo", f."scanId",
+                        f."createdAt"
+                    FROM "Finding" f
+                    JOIN "Scan" s ON f."scanId" = s.id
+                    WHERE s."projectId" = %s
+                      AND s.environment = %s
+                      AND s.status = 'COMPLETED'
+                    ORDER BY f.type, f.method, f.endpoint, f."createdAt" DESC
+                """, (project_id, environment))
+
+                for r in cur.fetchall():
+                    # Key: type, method, endpoint (normalized)
+                    key = (r[1], r[2].upper() if r[2] else '', r[3])
+                    previous_findings[key] = {
+                        'id': r[0],
+                        'status': r[4],
+                        'resolutionNotes': r[5],
+                        'assignedTo': r[6],
+                        'scanId': r[7]
+                    }
+
+                print(f"[SCAN] Found {len(previous_findings)} unique findings from previous scans")
             except Exception as e:
                 print(f"[SCAN] Warning: Failed to fetch previous findings: {e}")
 
-        # Save findings to database
-        for finding in findings:
-            # Determine status based on history
-            status = 'OPEN'
-            resolution_notes = None
-            assigned_to = None
-            
-            f_key = (finding['type'], finding['method'].upper(), finding['endpoint'])
-            
-            if f_key in previous_states:
-                prev = previous_states[f_key]
-                # If previously fixed but found again -> OPEN (Regression)
-                # If previously FALSE_POSITIVE -> Keep FALSE_POSITIVE
-                # If previously ACCEPTED -> Keep ACCEPTED
-                # If previously OPEN -> Keep OPEN
-                
-                if prev['status'] == 'FIXED':
-                    status = 'OPEN'
-                    # We could auto-append a note here, but keeping it simple for now
-                else:
-                    status = prev['status']
-                    resolution_notes = prev['resolutionNotes']
-                    assigned_to = prev['assignedTo']
+        # Save findings to database with deduplication
+        # Track: new findings created, existing findings linked, regressions detected
+        new_findings_count = 0
+        linked_findings_count = 0
+        regression_count = 0
 
-            cur.execute("""
-                INSERT INTO "Finding" (
-                    id, "scanId", type, severity, description,
-                    endpoint, method, remediation, "owaspCategory",
-                    "cweId", evidence, "createdAt",
-                    status, "resolutionNotes", "assignedTo"
-                )
-                VALUES (
-                    gen_random_uuid(), %s, %s, %s, %s,
-                    %s, %s, %s, %s,
-                    %s, %s, NOW(),
-                    %s, %s, %s
-                )
-            """, (
-                scan_id,
-                finding['type'],
-                finding['severity'],
-                finding['description'],
-                finding['endpoint'],
-                finding['method'],
-                finding.get('remediation', ''),
-                finding.get('owasp_category', ''),
-                finding.get('cwe_id'),
-                finding.get('evidence'),
-                status,
-                resolution_notes,
-                assigned_to
-            ))
+        for finding in findings:
+            f_key = (finding['type'], finding['method'].upper(), finding['endpoint'])
+
+            # Check if this finding already exists in this project
+            if f_key in previous_findings:
+                prev = previous_findings[f_key]
+                linked_findings_count += 1
+
+                # Determine if this is a regression (was FIXED, now found again)
+                if prev['status'] == 'FIXED':
+                    regression_count += 1
+                    # Create a new finding marked as regression
+                    cur.execute("""
+                        INSERT INTO "Finding" (
+                            id, "scanId", type, severity, description,
+                            endpoint, method, remediation, "owaspCategory",
+                            "cweId", evidence, "createdAt",
+                            status, "resolutionNotes", "assignedTo"
+                        )
+                        VALUES (
+                            gen_random_uuid(), %s, %s, %s, %s,
+                            %s, %s, %s, %s,
+                            %s, %s, NOW(),
+                            'OPEN', %s, %s
+                        )
+                    """, (
+                        scan_id,
+                        finding['type'],
+                        finding['severity'],
+                        finding['description'],
+                        finding['endpoint'],
+                        finding['method'],
+                        finding.get('remediation', ''),
+                        finding.get('owasp_category', ''),
+                        finding.get('cwe_id'),
+                        finding.get('evidence'),
+                        f"REGRESSION: Previously fixed, found again in scan. Original notes: {prev['resolutionNotes'] or 'None'}",
+                        prev['assignedTo']
+                    ))
+                    print(f"[SCAN] Regression detected: {finding['type']} on {finding['method']} {finding['endpoint']}")
+                elif prev['status'] in ('FALSE_POSITIVE', 'ACCEPTED'):
+                    # Skip findings that were marked as false positive or accepted
+                    # They should not reappear in new scans
+                    print(f"[SCAN] Skipping {prev['status']} finding: {finding['type']} on {finding['endpoint']}")
+                    continue
+                else:
+                    # OPEN or IN_PROGRESS - link to current scan with inherited state
+                    cur.execute("""
+                        INSERT INTO "Finding" (
+                            id, "scanId", type, severity, description,
+                            endpoint, method, remediation, "owaspCategory",
+                            "cweId", evidence, "createdAt",
+                            status, "resolutionNotes", "assignedTo"
+                        )
+                        VALUES (
+                            gen_random_uuid(), %s, %s, %s, %s,
+                            %s, %s, %s, %s,
+                            %s, %s, NOW(),
+                            %s, %s, %s
+                        )
+                    """, (
+                        scan_id,
+                        finding['type'],
+                        finding['severity'],
+                        finding['description'],
+                        finding['endpoint'],
+                        finding['method'],
+                        finding.get('remediation', ''),
+                        finding.get('owasp_category', ''),
+                        finding.get('cwe_id'),
+                        finding.get('evidence'),
+                        prev['status'],
+                        prev['resolutionNotes'],
+                        prev['assignedTo']
+                    ))
+            else:
+                # New finding - create fresh entry
+                new_findings_count += 1
+                cur.execute("""
+                    INSERT INTO "Finding" (
+                        id, "scanId", type, severity, description,
+                        endpoint, method, remediation, "owaspCategory",
+                        "cweId", evidence, "createdAt",
+                        status, "resolutionNotes", "assignedTo"
+                    )
+                    VALUES (
+                        gen_random_uuid(), %s, %s, %s, %s,
+                        %s, %s, %s, %s,
+                        %s, %s, NOW(),
+                        'OPEN', NULL, NULL
+                    )
+                """, (
+                    scan_id,
+                    finding['type'],
+                    finding['severity'],
+                    finding['description'],
+                    finding['endpoint'],
+                    finding['method'],
+                    finding.get('remediation', ''),
+                    finding.get('owasp_category', ''),
+                    finding.get('cwe_id'),
+                    finding.get('evidence')
+                ))
+
+        print(f"[SCAN] Deduplication summary: {new_findings_count} new, {linked_findings_count} existing, {regression_count} regressions")
 
         # Update scan status to COMPLETED
         cur.execute(

@@ -10,6 +10,9 @@ import { Profile } from './pages/Profile';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
+import { ScanConfig } from './pages/ScanConfig';
+import { ScanResults } from './pages/ScanResults';
+import { CLITerminal } from './pages/CLITerminal';
 
 function App() {
   return (
@@ -32,6 +35,15 @@ function App() {
             <Route path="billing" element={<Billing />} />
             <Route path="profile" element={<Profile />} />
             <Route path="admin" element={<AdminDashboard />} />
+
+            {/* New Routes */}
+            <Route path="scan/new" element={<ScanConfig />} />
+            <Route path="scan/quick" element={<ScanConfig />} />
+            <Route path="scan/:projectId/config" element={<ScanConfig />} />
+            <Route path="scans/:scanId" element={<ScanResults />} />
+            <Route path="scans" element={<ScanResults />} />
+            <Route path="cli" element={<CLITerminal />} />
+            <Route path="reports" element={<ScanResults />} />
           </Route>
 
           {/* Fallback */}

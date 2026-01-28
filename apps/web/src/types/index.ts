@@ -5,6 +5,7 @@ export interface User {
   stripeCustomerId?: string;
   onboardingCompleted: boolean;
   organizationId?: string;
+  organization?: Organization;
   apiKey?: string;
   role: 'ADMIN' | 'USER';
   createdAt: string;

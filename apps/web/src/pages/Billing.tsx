@@ -47,9 +47,9 @@ const planIcons = {
 };
 
 const planColors = {
-  free: { bg: 'bg-slate-100', text: 'text-slate-600', border: 'border-slate-200' },
-  pro: { bg: 'bg-indigo-100', text: 'text-indigo-600', border: 'border-indigo-500' },
-  enterprise: { bg: 'bg-purple-100', text: 'text-purple-600', border: 'border-purple-500' },
+  free: { bg: 'bg-white', text: 'text-gray-600', border: 'border-gray-200' },
+  pro: { bg: 'bg-industrial-surface', text: 'text-white', border: 'border-industrial-surface' },
+  enterprise: { bg: 'bg-industrial-action', text: 'text-white', border: 'border-industrial-action' },
 };
 
 export function Billing() {
@@ -96,16 +96,15 @@ export function Billing() {
       {/* Current Plan & Usage */}
       <div className="grid md:grid-cols-2 gap-6">
         <Card className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 to-purple-50 opacity-50" />
           <div className="relative">
             <div className="flex items-center gap-4 mb-4">
-              <div className="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center">
-                <CreditCard className="w-6 h-6 text-indigo-600" />
+              <div className="w-12 h-12 rounded-industrial bg-industrial-surface flex items-center justify-center">
+                <CreditCard className="w-6 h-6 text-white" />
               </div>
               <div>
                 <h2 className="font-semibold text-slate-900">Current Plan</h2>
                 <p className="text-sm text-slate-500">
-                  <span className="font-semibold text-indigo-600">{currentPlan?.name}</span>
+                  <span className="font-semibold text-industrial-action">{currentPlan?.name}</span>
                   {' '}-{' '}
                   {formatPrice(currentPlan?.price || 0)}/month
                 </p>
@@ -143,9 +142,9 @@ export function Billing() {
                   {usage.scansUsed} / {currentPlan?.scansPerMonth === -1 ? '∞' : currentPlan?.scansPerMonth}
                 </span>
               </div>
-              <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+              <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-500"
+                  className="h-full bg-industrial-action rounded-full transition-all duration-500"
                   style={{
                     width: `${currentPlan?.scansPerMonth === -1 ? 0 : Math.min(100, (usage.scansUsed / (currentPlan?.scansPerMonth || 1)) * 100)}%`,
                   }}
@@ -160,9 +159,9 @@ export function Billing() {
                   {usage.projectsUsed} / {currentPlan?.projectLimit === -1 ? '∞' : currentPlan?.projectLimit}
                 </span>
               </div>
-              <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+              <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-500"
+                  className="h-full bg-industrial-surface rounded-full transition-all duration-500"
                   style={{
                     width: `${currentPlan?.projectLimit === -1 ? 0 : Math.min(100, (usage.projectsUsed / (currentPlan?.projectLimit || 1)) * 100)}%`,
                   }}
@@ -234,7 +233,7 @@ function PlanCard({
     >
       {isPopular && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-          <Badge variant="primary" className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-0">
+          <Badge variant="primary" className="bg-industrial-action text-white border-0">
             Most Popular
           </Badge>
         </div>
@@ -247,8 +246,8 @@ function PlanCard({
       )}
 
       <div className="text-center mb-6">
-        <div className={clsx('w-14 h-14 rounded-2xl mx-auto flex items-center justify-center mb-4', colors.bg)}>
-          <span className={colors.text}>
+        <div className={clsx('w-14 h-14 rounded-industrial mx-auto flex items-center justify-center mb-4', colors.bg)}>
+          <span className={clsx('font-bold', colors.text === 'text-white' ? 'text-white' : 'text-gray-900')}>
             {planIcons[plan.id as keyof typeof planIcons]}
           </span>
         </div>

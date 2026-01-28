@@ -16,14 +16,14 @@ export const Card: React.FC<CardProps> = ({
     className,
     ...props
 }) => {
-    // Industrial Card Style: White bg, thin border, sharp(er) corners
-    const baseStyles = 'rounded-md transition-all duration-200 bg-white';
+    // Industrial Card Style: White bg, industrial border, rounded-industrial
+    const baseStyles = 'rounded-industrial transition-all duration-200 bg-white';
 
     const variants = {
-        default: 'border border-gray-200 shadow-sm',
-        elevated: 'border border-gray-200 shadow-md',
-        glass: 'bg-white/90 backdrop-blur border border-white/50 shadow-lg', // Keeping functionality but reducing usage
-        bordered: 'border-2 border-gray-200',
+        default: 'border border-industrial-border shadow-sm',
+        elevated: 'border border-industrial-border shadow-md',
+        glass: 'bg-white/95 backdrop-blur border border-industrial-border shadow-sm',
+        bordered: 'border-2 border-industrial-border',
     };
 
     const paddings = {

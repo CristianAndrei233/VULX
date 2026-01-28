@@ -22,19 +22,68 @@ router.get('/', async (req, res) => {
     return res.json([]); // No org, no projects
   }
 
+  const environment = req.environment || 'PRODUCTION';
+
   const projects = await prisma.project.findMany({
     where: { organizationId: user.organizationId },
     orderBy: { createdAt: 'desc' },
-    include: { scans: { take: 1, orderBy: { startedAt: 'desc' } } }
+    include: { 
+        scans: { 
+            where: { environment },
+            take: 1, 
+            orderBy: { startedAt: 'desc' },
+            include: { findings: true }
+        } 
+    }
   });
-  res.json(projects);
+
+  // Calculate stats based on environmental scans
+  const projectsWithStats = projects.map((p: any) => {
+    const lastScan = p.scans[0];
+    // Filter findings by environment just in case, though scan filter should handle it
+    const relevantFindings = lastScan?.findings?.filter((f: any) => f.environment === environment) || [];
+    
+    return {
+        ...p,
+        scans: p.scans, // already filtered
+        stats: {
+             lastScanAt: lastScan?.startedAt,
+             findingsCount: relevantFindings.length,
+             criticalCount: relevantFindings.filter((f: any) => f.severity === 'CRITICAL').length
+        }
+    };
+  });
+
+  res.json(projectsWithStats);
 });
 
 router.post('/', async (req, res) => {
   try {
     const user = (req as AuthRequest).user!;
-    if (!user.organizationId) {
-      return res.status(400).json({ error: 'User does not belong to an organization' });
+    let orgId = user.organizationId;
+
+    if (!orgId) {
+      // Auto-fix: Find existing org or create default
+      const existingOrg = await prisma.organization.findFirst({
+        where: { users: { some: { id: user.id } } }
+      });
+
+      if (existingOrg) {
+        orgId = existingOrg.id;
+      } else {
+        const newOrg = await prisma.organization.create({
+          data: {
+            name: `My Organization`,
+            users: { connect: { id: user.id } }
+          }
+        });
+        orgId = newOrg.id;
+        // Update user to have this as primary org
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { organizationId: orgId }
+        });
+      }
     }
 
     let { name, specContent, specUrl, targetUrl } = CreateProjectSchema.parse(req.body);
@@ -59,7 +108,7 @@ router.post('/', async (req, res) => {
     const project = await prisma.project.create({
       data: {
         name,
-        organizationId: user.organizationId,
+        organizationId: orgId,
         specContent,
         specUrl,
         targetUrl,

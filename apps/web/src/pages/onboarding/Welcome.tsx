@@ -5,16 +5,16 @@ export function Welcome() {
   const { nextStep } = useOnboarding();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-industrial-base flex items-center justify-center p-4">
       <div className="max-w-2xl w-full">
         <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-blue-600 rounded-2xl mb-6">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-industrial-action rounded-industrial mb-6">
             <Shield className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-4xl font-bold text-white mb-4">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
             Welcome to VULX
           </h1>
-          <p className="text-xl text-slate-300">
+          <p className="text-xl text-gray-600">
             The API security scanner that helps you find vulnerabilities before attackers do.
           </p>
         </div>
@@ -40,12 +40,12 @@ export function Welcome() {
         <div className="text-center">
           <button
             onClick={nextStep}
-            className="inline-flex items-center gap-2 px-8 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+            className="inline-flex items-center gap-2 px-8 py-4 bg-industrial-action text-white font-semibold rounded-industrial hover:bg-industrial-action-hover transition-colors"
           >
             Get Started
             <ArrowRight className="w-5 h-5" />
           </button>
-          <p className="mt-4 text-sm text-slate-400">
+          <p className="mt-4 text-sm text-gray-400">
             Takes less than 2 minutes to set up
           </p>
         </div>
@@ -56,8 +56,8 @@ export function Welcome() {
 
 function Feature({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
   return (
-    <div className="flex gap-4 p-4 bg-slate-800/50 rounded-lg border border-slate-700">
-      <div className="flex-shrink-0 w-12 h-12 bg-blue-600/20 rounded-lg flex items-center justify-center text-blue-400">
+    <div className="flex gap-4 p-4 bg-white rounded-industrial border border-gray-200">
+      <div className="flex-shrink-0 w-12 h-12 bg-industrial-action/10 rounded-industrial flex items-center justify-center text-industrial-action">
         {icon}
       </div>
       <div>

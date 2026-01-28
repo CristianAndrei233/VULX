@@ -215,9 +215,9 @@ export const ScanConfig: React.FC = () => {
 
       {/* Project Selection (Visible only if no projectId in URL) */}
       {!projectId && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div className="bg-white rounded-industrial shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-            <Target className="w-5 h-5 mr-2 text-indigo-600" />
+            <Target className="w-5 h-5 mr-2 text-industrial-action" />
             Select Project
           </h2>
 
@@ -228,7 +228,7 @@ export const ScanConfig: React.FC = () => {
               <p className="text-gray-500 mb-4">You need a project to start a scan.</p>
               <Link
                 to="/new"
-                className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                className="inline-flex items-center px-4 py-2 bg-industrial-action text-white rounded-industrial hover:bg-industrial-action-hover"
               >
                 Create New Project
               </Link>
@@ -241,7 +241,7 @@ export const ScanConfig: React.FC = () => {
               <select
                 value={selectedProjectId}
                 onChange={(e) => handleProjectChange(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-industrial focus:ring-2 focus:ring-industrial-action focus:border-industrial-action"
               >
                 {projects.map(p => (
                   <option key={p.id} value={p.id}>
@@ -256,9 +256,9 @@ export const ScanConfig: React.FC = () => {
       )}
 
       {/* Target Configuration */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      <div className="bg-white rounded-industrial shadow-sm border border-gray-100 p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-          <Globe className="w-5 h-5 mr-2 text-indigo-600" />
+          <Globe className="w-5 h-5 mr-2 text-industrial-action" />
           Target Configuration
         </h2>
 
@@ -272,7 +272,7 @@ export const ScanConfig: React.FC = () => {
               value={config.targetUrl}
               onChange={(e) => updateConfig('targetUrl', e.target.value)}
               placeholder="https://api.example.com"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-industrial focus:ring-2 focus:ring-industrial-action focus:border-industrial-action"
             />
             <p className="mt-1 text-xs text-gray-500">The base URL of the API you want to scan</p>
           </div>
@@ -287,7 +287,7 @@ export const ScanConfig: React.FC = () => {
                 value={config.specUrl}
                 onChange={(e) => updateConfig('specUrl', e.target.value)}
                 placeholder="https://api.example.com/openapi.json"
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-industrial focus:ring-2 focus:ring-industrial-action focus:border-industrial-action"
               />
               <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center">
                 <FileJson className="w-4 h-4 mr-2" />
@@ -300,9 +300,9 @@ export const ScanConfig: React.FC = () => {
       </div>
 
       {/* Scan Type Selection */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      <div className="bg-white rounded-industrial shadow-sm border border-gray-100 p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-          <Zap className="w-5 h-5 mr-2 text-indigo-600" />
+          <Zap className="w-5 h-5 mr-2 text-industrial-action" />
           Scan Type
         </h2>
 
@@ -311,15 +311,15 @@ export const ScanConfig: React.FC = () => {
             <button
               key={scanType.type}
               onClick={() => handleScanTypeChange(scanType.type)}
-              className={`p-4 rounded-lg border-2 text-left transition-all ${config.scanType === scanType.type
-                ? 'border-indigo-600 bg-indigo-50'
+              className={`p-4 rounded-industrial border-2 text-left transition-all ${config.scanType === scanType.type
+                ? 'border-industrial-action bg-industrial-surface/5'
                 : 'border-gray-200 hover:border-gray-300'
                 }`}
             >
               <div className="flex items-center justify-between mb-2">
                 <span className="font-semibold text-gray-900">{scanType.name}</span>
                 {config.scanType === scanType.type && (
-                  <CheckCircle className="w-5 h-5 text-indigo-600" />
+                  <CheckCircle className="w-5 h-5 text-industrial-action" />
                 )}
               </div>
               <p className="text-sm text-gray-500 mb-3">{scanType.description}</p>
@@ -345,9 +345,9 @@ export const ScanConfig: React.FC = () => {
       </div>
 
       {/* Authentication Configuration */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      <div className="bg-white rounded-industrial shadow-sm border border-gray-100 p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-          <Lock className="w-5 h-5 mr-2 text-indigo-600" />
+          <Lock className="w-5 h-5 mr-2 text-industrial-action" />
           Authentication
         </h2>
 
@@ -357,8 +357,8 @@ export const ScanConfig: React.FC = () => {
             <button
               key={auth.method}
               onClick={() => updateConfig('authMethod', auth.method)}
-              className={`p-3 rounded-lg border text-left transition-all flex items-center space-x-2 ${config.authMethod === auth.method
-                ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
+              className={`p-3 rounded-industrial border text-left transition-all flex items-center space-x-2 ${config.authMethod === auth.method
+                ? 'border-industrial-action bg-industrial-surface/5 text-industrial-action'
                 : 'border-gray-200 hover:border-gray-300 text-gray-700'
                 }`}
             >
@@ -544,13 +544,13 @@ export const ScanConfig: React.FC = () => {
       </div>
 
       {/* Advanced Settings */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-industrial shadow-sm border border-gray-100 overflow-hidden">
         <button
           onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
           className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50"
         >
           <h2 className="text-lg font-semibold text-gray-900 flex items-center">
-            <Settings className="w-5 h-5 mr-2 text-indigo-600" />
+            <Settings className="w-5 h-5 mr-2 text-industrial-action" />
             Advanced Settings
           </h2>
           {isAdvancedOpen ? (
@@ -616,9 +616,9 @@ export const ScanConfig: React.FC = () => {
       </div>
 
       {/* Info Box */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start space-x-3">
-        <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-        <div className="text-sm text-blue-700">
+      <div className="bg-industrial-surface/5 border border-industrial-border rounded-industrial p-4 flex items-start space-x-3">
+        <Info className="w-5 h-5 text-industrial-surface flex-shrink-0 mt-0.5" />
+        <div className="text-sm text-industrial-surface">
           <p className="font-medium">Important</p>
           <p className="mt-1">
             Ensure you have authorization to scan the target. VULX performs active security testing
@@ -639,7 +639,7 @@ export const ScanConfig: React.FC = () => {
         <button
           onClick={handleStartScan}
           disabled={isStarting || !config.targetUrl}
-          className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-6 py-2 bg-industrial-action text-white rounded-industrial hover:bg-industrial-action-hover transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isStarting ? (
             <>

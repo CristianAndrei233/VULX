@@ -25,23 +25,23 @@ export interface SeverityBadgeProps {
 }
 
 const variants: Record<BadgeVariant, string> = {
-    default: 'bg-slate-100 text-slate-700 border border-slate-200',
-    success: 'bg-success/10 text-success border border-success/20',
-    warning: 'bg-warning/10 text-warning border border-warning/20',
-    error: 'bg-critical/10 text-critical border border-critical/20',
-    info: 'bg-info/10 text-info border border-info/20',
+    default: 'bg-industrial-code text-gray-700 border border-gray-200',
+    success: 'bg-severity-success/10 text-severity-success border border-severity-success/20',
+    warning: 'bg-severity-high/10 text-severity-high border border-severity-high/20',
+    error: 'bg-severity-critical/10 text-severity-critical border border-severity-critical/20',
+    info: 'bg-severity-medium/10 text-severity-medium border border-severity-medium/20',
 
-    // Aliases for backward compatibility
-    primary: 'bg-slate-100 text-slate-700 border border-slate-200', // mapped to default
-    danger: 'bg-critical/10 text-critical border border-critical/20', // mapped to error
-    critical: 'bg-critical/10 text-critical border border-critical/20', // mapped to error
-    high: 'bg-warning/10 text-warning border border-warning/20', // mapped to warning
+    // Aliases
+    primary: 'bg-industrial-code text-gray-700 border border-gray-200',
+    danger: 'bg-severity-critical/10 text-severity-critical border border-severity-critical/20',
+    critical: 'bg-severity-critical/10 text-severity-critical border border-severity-critical/20',
+    high: 'bg-severity-high/10 text-severity-high border border-severity-high/20',
 };
 
 const sizes = {
-    sm: 'px-2 py-0.5 text-xs',
-    md: 'px-2.5 py-0.5 text-sm',
-    lg: 'px-3 py-1 text-base',
+    sm: 'px-2 py-0.5 text-xs rounded-industrial',
+    md: 'px-2.5 py-0.5 text-sm rounded-industrial',
+    lg: 'px-3 py-1 text-base rounded-industrial',
 };
 
 export const Badge: React.FC<BadgeProps> = ({
@@ -56,7 +56,7 @@ export const Badge: React.FC<BadgeProps> = ({
         <span
             className={twMerge(
                 clsx(
-                    'inline-flex items-center font-medium rounded-sm',
+                    'inline-flex items-center font-medium',
                     variants[variant] || variants.default,
                     sizes[size],
                     className
@@ -94,8 +94,8 @@ export const SeverityBadge: React.FC<SeverityBadgeProps> = ({ severity, size = '
 
     if (s === 'CRITICAL') variant = 'error';
     else if (s === 'HIGH') variant = 'warning';
-    else if (s === 'MEDIUM') variant = 'warning'; // Medium shares warning color
-    else if (s === 'LOW') variant = 'success';
+    else if (s === 'MEDIUM') variant = 'info'; // Medium checks to info (Teal)
+    else if (s === 'LOW') variant = 'success'; // Low checks to Moss
 
     return (
         <Badge variant={variant} size={size} className="uppercase tracking-wider font-bold">

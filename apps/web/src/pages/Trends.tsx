@@ -56,11 +56,11 @@ const PERIOD_OPTIONS = [
 ];
 
 const SEVERITY_COLORS: Record<string, string> = {
-    CRITICAL: 'bg-red-500',
-    HIGH: 'bg-orange-500',
-    MEDIUM: 'bg-amber-400',
-    LOW: 'bg-emerald-500',
-    INFO: 'bg-blue-500'
+    CRITICAL: 'bg-severity-critical',
+    HIGH: 'bg-severity-high',
+    MEDIUM: 'bg-severity-medium',
+    LOW: 'bg-severity-low',
+    INFO: 'bg-slate-400'
 };
 
 export function Trends() {
@@ -97,8 +97,8 @@ export function Trends() {
 
     const TrendIcon = ({ trend, inverted = false }: { trend: string; inverted?: boolean }) => {
         const isGood = inverted ? trend === 'increasing' : trend === 'decreasing';
-        if (trend === 'increasing') return <TrendingUp className={clsx('w-4 h-4', isGood ? 'text-emerald-500' : 'text-red-500')} />;
-        if (trend === 'decreasing') return <TrendingDown className={clsx('w-4 h-4', isGood ? 'text-emerald-500' : 'text-red-500')} />;
+        if (trend === 'increasing') return <TrendingUp className={clsx('w-4 h-4', isGood ? 'text-severity-success' : 'text-severity-critical')} />;
+        if (trend === 'decreasing') return <TrendingDown className={clsx('w-4 h-4', isGood ? 'text-severity-success' : 'text-severity-critical')} />;
         return <Minus className="w-4 h-4 text-slate-400" />;
     };
 
@@ -143,7 +143,7 @@ export function Trends() {
             {/* Summary Cards */}
             {summary && (
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    <Card hoverable className="border-l-4 border-l-blue-500">
+                    <Card hoverable className="border-l-4 border-l-severity-low">
                         <div className="flex items-start justify-between">
                             <div>
                                 <p className="text-sm font-medium text-slate-500">New Findings</p>
@@ -152,51 +152,51 @@ export function Trends() {
                                     <TrendIcon trend={summary.changes.trend} />
                                     <span className={clsx(
                                         'font-medium',
-                                        summary.changes.trend === 'decreasing' ? 'text-emerald-600' :
-                                            summary.changes.trend === 'increasing' ? 'text-red-600' : 'text-slate-500'
+                                        summary.changes.trend === 'decreasing' ? 'text-severity-success' :
+                                            summary.changes.trend === 'increasing' ? 'text-severity-critical' : 'text-slate-500'
                                     )}>
                                         {Math.abs(summary.changes.findingsChange)}%
                                     </span>
                                 </div>
                             </div>
-                            <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                                <Search className="w-5 h-5 text-blue-600" />
+                            <div className="w-10 h-10 rounded-industrial bg-severity-low/10 flex items-center justify-center">
+                                <Search className="w-5 h-5 text-severity-low" />
                             </div>
                         </div>
                     </Card>
 
-                    <Card hoverable className="border-l-4 border-l-emerald-500">
+                    <Card hoverable className="border-l-4 border-l-severity-success">
                         <div className="flex items-start justify-between">
                             <div>
                                 <p className="text-sm font-medium text-slate-500">Fixed This Period</p>
-                                <p className="text-3xl font-bold text-emerald-600 mt-1">{summary.currentPeriod.fixedFindings}</p>
+                                <p className="text-3xl font-bold text-severity-success mt-1">{summary.currentPeriod.fixedFindings}</p>
                             </div>
-                            <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-                                <CheckCircle className="w-5 h-5 text-emerald-600" />
+                            <div className="w-10 h-10 rounded-industrial bg-severity-success/10 flex items-center justify-center">
+                                <CheckCircle className="w-5 h-5 text-severity-success" />
                             </div>
                         </div>
                     </Card>
 
-                    <Card hoverable className="border-l-4 border-l-purple-500">
+                    <Card hoverable className="border-l-4 border-l-severity-medium">
                         <div className="flex items-start justify-between">
                             <div>
                                 <p className="text-sm font-medium text-slate-500">Avg Risk Score</p>
                                 <p className="text-3xl font-bold text-slate-900 mt-1">{summary.currentPeriod.avgRiskScore}</p>
                             </div>
-                            <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-                                <BarChart3 className="w-5 h-5 text-purple-600" />
+                            <div className="w-10 h-10 rounded-industrial bg-severity-medium/10 flex items-center justify-center">
+                                <BarChart3 className="w-5 h-5 text-severity-medium" />
                             </div>
                         </div>
                     </Card>
 
-                    <Card hoverable className="border-l-4 border-l-red-500">
+                    <Card hoverable className="border-l-4 border-l-severity-critical">
                         <div className="flex items-start justify-between">
                             <div>
                                 <p className="text-sm font-medium text-slate-500">Total Open</p>
-                                <p className="text-3xl font-bold text-red-600 mt-1">{summary.currentPeriod.totalOpen}</p>
+                                <p className="text-3xl font-bold text-severity-critical mt-1">{summary.currentPeriod.totalOpen}</p>
                             </div>
-                            <div className="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center">
-                                <AlertTriangle className="w-5 h-5 text-red-600" />
+                            <div className="w-10 h-10 rounded-industrial bg-severity-critical/10 flex items-center justify-center">
+                                <AlertTriangle className="w-5 h-5 text-severity-critical" />
                             </div>
                         </div>
                     </Card>
@@ -208,29 +208,29 @@ export function Trends() {
                 <Card>
                     <CardHeader title="Fix Velocity" icon={<Timer className="w-5 h-5 text-slate-400" />} />
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div className="bg-slate-50 rounded-xl p-4">
+                        <div className="bg-white border border-gray-200 rounded-industrial p-4 summary-card">
                             <p className="text-2xl font-bold text-slate-900">{velocity.summary.avgMttrHours}h</p>
                             <p className="text-sm text-slate-500 mt-1">Mean Time to Remediate</p>
                         </div>
-                        <div className="bg-slate-50 rounded-xl p-4">
+                        <div className="bg-white border border-gray-200 rounded-industrial p-4 summary-card">
                             <div className="flex items-center justify-between mb-2">
                                 <p className="text-2xl font-bold text-slate-900">{velocity.summary.fixRate}%</p>
                             </div>
                             <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
                                 <div
-                                    className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all"
+                                    className="h-full bg-industrial-action transition-all"
                                     style={{ width: `${velocity.summary.fixRate}%` }}
                                 />
                             </div>
                             <p className="text-sm text-slate-500 mt-2">Fix Rate</p>
                         </div>
-                        <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-200">
-                            <p className="text-2xl font-bold text-emerald-600">{velocity.summary.totalFixed}</p>
-                            <p className="text-sm text-emerald-700 mt-1">Total Fixed</p>
+                        <div className="bg-severity-success/5 rounded-industrial p-4 border border-severity-success/20">
+                            <p className="text-2xl font-bold text-severity-success">{velocity.summary.totalFixed}</p>
+                            <p className="text-sm text-severity-success mt-1">Total Fixed</p>
                         </div>
-                        <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
-                            <p className="text-2xl font-bold text-blue-600">{velocity.summary.totalNew}</p>
-                            <p className="text-sm text-blue-700 mt-1">Total New</p>
+                        <div className="bg-severity-low/5 rounded-industrial p-4 border border-severity-low/20">
+                            <p className="text-2xl font-bold text-severity-low">{velocity.summary.totalNew}</p>
+                            <p className="text-sm text-severity-low mt-1">Total New</p>
                         </div>
                     </div>
                 </Card>
@@ -245,9 +245,9 @@ export function Trends() {
                             <div key={idx} className="flex-1 flex flex-col items-center gap-2">
                                 <div
                                     className={clsx(
-                                        'w-full rounded-t-md transition-all',
-                                        point.riskScore >= 70 ? 'bg-red-500' :
-                                            point.riskScore >= 40 ? 'bg-amber-500' : 'bg-emerald-500'
+                                        'w-full rounded-t-sm transition-all',
+                                        point.riskScore >= 70 ? 'bg-severity-critical' :
+                                            point.riskScore >= 40 ? 'bg-severity-high' : 'bg-severity-success'
                                     )}
                                     style={{ height: `${point.riskScore}%` }}
                                     title={`${point.date}: ${point.riskScore}`}
@@ -283,11 +283,11 @@ export function Trends() {
                             const total = point.CRITICAL + point.HIGH + point.MEDIUM + point.LOW + point.INFO || 1;
                             return (
                                 <div key={idx} className="flex-1 flex flex-col rounded-t overflow-hidden" style={{ height: `${Math.min(total * 10, 100)}%` }}>
-                                    {point.CRITICAL > 0 && <div className="bg-red-500" style={{ flex: point.CRITICAL }} />}
-                                    {point.HIGH > 0 && <div className="bg-orange-500" style={{ flex: point.HIGH }} />}
-                                    {point.MEDIUM > 0 && <div className="bg-amber-400" style={{ flex: point.MEDIUM }} />}
-                                    {point.LOW > 0 && <div className="bg-emerald-500" style={{ flex: point.LOW }} />}
-                                    {point.INFO > 0 && <div className="bg-blue-500" style={{ flex: point.INFO }} />}
+                                    {point.CRITICAL > 0 && <div className="bg-severity-critical" style={{ flex: point.CRITICAL }} />}
+                                    {point.HIGH > 0 && <div className="bg-severity-high" style={{ flex: point.HIGH }} />}
+                                    {point.MEDIUM > 0 && <div className="bg-severity-medium" style={{ flex: point.MEDIUM }} />}
+                                    {point.LOW > 0 && <div className="bg-severity-low" style={{ flex: point.LOW }} />}
+                                    {point.INFO > 0 && <div className="bg-slate-400" style={{ flex: point.INFO }} />}
                                 </div>
                             );
                         })}

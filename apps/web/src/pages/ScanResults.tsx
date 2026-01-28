@@ -264,13 +264,13 @@ const FindingCard: React.FC<{
                     )}
                   </div>
                   {finding.cvssScore && (
-                    <div className="bg-slate-50 rounded-lg p-3">
+                    <div className="bg-slate-50 rounded-industrial p-3">
                       <h4 className="text-xs font-medium text-slate-500 uppercase mb-1">CVSS Score</h4>
                       <p className={clsx(
                         'text-sm font-bold',
-                        finding.cvssScore >= 9 ? 'text-red-600' :
-                          finding.cvssScore >= 7 ? 'text-orange-600' :
-                            finding.cvssScore >= 4 ? 'text-amber-600' : 'text-blue-600'
+                        finding.cvssScore >= 9 ? 'text-severity-critical' :
+                          finding.cvssScore >= 7 ? 'text-severity-high' :
+                            finding.cvssScore >= 4 ? 'text-severity-medium' : 'text-severity-low'
                       )}>
                         {finding.cvssScore} / 10
                       </p>
@@ -383,16 +383,16 @@ const StatCard: React.FC<{
   severity?: 'critical' | 'high' | 'medium' | 'low' | 'info';
 }> = ({ label, value, severity }) => {
   const colors = {
-    critical: 'bg-red-50 border-red-200 text-red-700',
-    high: 'bg-orange-50 border-orange-200 text-orange-700',
-    medium: 'bg-amber-50 border-amber-200 text-amber-700',
-    low: 'bg-blue-50 border-blue-200 text-blue-700',
+    critical: 'bg-red-50 border-red-200 text-severity-critical',
+    high: 'bg-orange-50 border-orange-200 text-severity-high',
+    medium: 'bg-teal-50 border-teal-200 text-severity-medium',
+    low: 'bg-emerald-50 border-emerald-200 text-severity-low',
     info: 'bg-slate-50 border-slate-200 text-slate-700'
   };
 
   return (
     <div className={clsx(
-      'rounded-xl border p-4 transition-transform hover:scale-[1.02]',
+      'rounded-industrial border p-4 transition-transform hover:scale-[1.02] bg-white',
       severity ? colors[severity] : 'bg-white border-slate-200'
     )}>
       <p className="text-sm font-medium opacity-80">{label}</p>

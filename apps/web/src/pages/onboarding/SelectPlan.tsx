@@ -78,13 +78,13 @@ export function SelectPlan() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-industrial-base flex items-center justify-center p-4">
       <div className="max-w-4xl w-full">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Choose your plan
           </h1>
-          <p className="text-slate-400">
+          <p className="text-gray-500">
             Start free and upgrade as you grow. All plans include a 14-day trial.
           </p>
         </div>
@@ -105,14 +105,14 @@ export function SelectPlan() {
           <button
             type="button"
             onClick={prevStep}
-            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-slate-700 text-white font-medium rounded-lg hover:bg-slate-600 transition-colors"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white border border-gray-300 text-gray-700 font-medium rounded-industrial hover:bg-gray-50 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back
           </button>
           <button
             onClick={handleSubmit}
-            className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+            className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-industrial-action text-white font-medium rounded-industrial hover:bg-industrial-action-hover transition-colors"
           >
             Continue with {selected?.name}
             <ArrowRight className="w-4 h-4" />
@@ -143,41 +143,39 @@ function PlanCard({
   return (
     <div
       onClick={onSelect}
-      className={`relative p-6 rounded-xl border-2 cursor-pointer transition-all ${
-        isSelected
-          ? 'border-blue-500 bg-slate-800/80'
-          : 'border-slate-700 bg-slate-800/50 hover:border-slate-600'
-      }`}
+      className={`relative p-6 rounded-industrial border-2 cursor-pointer transition-all ${isSelected
+        ? 'border-industrial-action bg-white shadow-md'
+        : 'border-gray-200 bg-white hover:border-gray-300'
+        }`}
     >
       {isPopular && (
-        <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-blue-600 text-white text-xs font-semibold rounded-full">
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-industrial-action text-white text-xs font-semibold rounded-industrial">
           Most Popular
         </div>
       )}
 
       <div className="text-center mb-6">
-        <h3 className="text-xl font-semibold text-white mb-2">{plan.name}</h3>
+        <h3 className="text-xl font-semibold text-gray-900 mb-2">{plan.name}</h3>
         <div className="flex items-baseline justify-center gap-1">
-          <span className="text-4xl font-bold text-white">{formatPrice(plan.price)}</span>
-          {plan.price > 0 && <span className="text-slate-400">/month</span>}
+          <span className="text-4xl font-bold text-gray-900">{formatPrice(plan.price)}</span>
+          {plan.price > 0 && <span className="text-gray-500">/month</span>}
         </div>
       </div>
 
       <ul className="space-y-3 mb-6">
         {plan.features.map((feature, i) => (
-          <li key={i} className="flex items-start gap-2 text-sm text-slate-300">
-            <Check className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" />
+          <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
+            <Check className="w-4 h-4 text-severity-success flex-shrink-0 mt-0.5" />
             {feature}
           </li>
         ))}
       </ul>
 
       <div
-        className={`w-full py-2 text-center rounded-lg font-medium transition-colors ${
-          isSelected
-            ? 'bg-blue-600 text-white'
-            : 'bg-slate-700 text-slate-300'
-        }`}
+        className={`w-full py-2 text-center rounded-industrial font-medium transition-colors ${isSelected
+          ? 'bg-industrial-action text-white'
+          : 'bg-gray-100 text-gray-600'
+          }`}
       >
         {isSelected ? 'Selected' : 'Select Plan'}
       </div>
@@ -191,9 +189,8 @@ function StepIndicator({ current, total }: { current: number; total: number }) {
       {Array.from({ length: total }, (_, i) => (
         <div
           key={i}
-          className={`w-2 h-2 rounded-full transition-colors ${
-            i + 1 <= current ? 'bg-blue-500' : 'bg-slate-700'
-          }`}
+          className={`w-2 h-2 rounded-full transition-colors ${i + 1 <= current ? 'bg-industrial-action' : 'bg-gray-300'
+            }`}
         />
       ))}
     </div>

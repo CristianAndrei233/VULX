@@ -14,7 +14,8 @@ import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { ScanConfig } from './pages/ScanConfig';
 import { ScanResults } from './pages/ScanResults';
-import { CLITerminal } from './pages/CLITerminal';
+import { Notifications } from './pages/Notifications';
+
 import { Integrations } from './pages/Integrations';
 import { Remediation } from './pages/Remediation';
 import { Trends } from './pages/Trends';
@@ -36,12 +37,16 @@ function App() {
                 <Layout />
               </RequireAuth>
             }>
+              <Route path="dashboard" element={<Navigate to="/" replace />} />
+              <Route path="projects" element={<Navigate to="/" replace />} />
+              <Route path="settings" element={<Navigate to="/profile" replace />} />
               <Route index element={<Dashboard />} />
               <Route path="new" element={<CreateProject />} />
               <Route path="projects/:id" element={<ProjectDetails />} />
               <Route path="projects/:id/settings" element={<ProjectSettings />} />
               <Route path="billing" element={<Billing />} />
               <Route path="profile" element={<Profile />} />
+              <Route path="notifications" element={<Notifications />} />
               <Route path="admin" element={<AdminDashboard />} />
               <Route path="integrations" element={<Integrations />} />
               <Route path="remediation" element={<Remediation />} />
@@ -54,7 +59,7 @@ function App() {
               <Route path="scan/:projectId/config" element={<ScanConfig />} />
               <Route path="scans/:scanId" element={<ScanResults />} />
               <Route path="scans" element={<ScanResults />} />
-              <Route path="cli" element={<CLITerminal />} />
+
               <Route path="reports" element={<ScanResults />} />
             </Route>
 

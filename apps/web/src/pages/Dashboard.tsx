@@ -9,7 +9,7 @@ import {
   Activity,
   AlertTriangle,
   ChevronRight,
-  Terminal,
+
   BarChart3,
   Target,
   Zap,
@@ -29,40 +29,40 @@ const StatCard: React.FC<{
   trend?: { value: number; positive: boolean };
   gradient: string;
   iconBg: string;
-}> = ({ title, value, icon, trend, gradient, iconBg }) => (
-  <Card variant="default" padding="md" hoverable className="relative overflow-hidden">
-    <div className="relative z-10">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-slate-500 mb-1">{title}</p>
-          <p className="text-3xl font-bold text-slate-900">{value}</p>
-          {trend && (
-            <p className={clsx(
-              'mt-2 text-sm font-medium flex items-center gap-1',
-              trend.positive ? 'text-emerald-600' : 'text-red-600'
-            )}>
-              <TrendingUp className={clsx('w-4 h-4', !trend.positive && 'rotate-180')} />
-              {trend.positive ? '+' : ''}{trend.value}% from last month
-            </p>
-          )}
-        </div>
-        <div className={clsx('w-12 h-12 rounded-xl flex items-center justify-center', iconBg)}>
-          {icon}
+}> = ({ title, value, icon, trend, iconBg,
+}) => (
+    <Card variant="default" padding="md" hoverable className="relative overflow-hidden border-industrial-border">
+      <div className="relative z-10">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium text-gray-500 mb-1">{title}</p>
+            <p className="text-3xl font-bold text-gray-900">{value}</p>
+            {trend && (
+              <p className={clsx(
+                'mt-2 text-sm font-medium flex items-center gap-1',
+                trend.positive ? 'text-severity-success' : 'text-severity-critical'
+              )}>
+                <TrendingUp className={clsx('w-4 h-4', !trend.positive && 'rotate-180')} />
+                {trend.positive ? '+' : ''}{trend.value}% from last month
+              </p>
+            )}
+          </div>
+          <div className={clsx('w-12 h-12 rounded-industrial flex items-center justify-center bg-gray-50', iconBg)}>
+            {icon}
+          </div>
         </div>
       </div>
-    </div>
-    <div className={clsx('absolute inset-0 opacity-5', gradient)} />
-  </Card>
-);
+    </Card>
+  );
 
 // Severity Chart Component
 const SeverityChart: React.FC<{ stats: DashboardStats }> = ({ stats }) => {
   const total = stats.totalFindings || 1;
   const data = [
-    { label: 'Critical', count: stats.criticalFindings, color: 'bg-red-500', textColor: 'text-red-600' },
-    { label: 'High', count: stats.highFindings, color: 'bg-orange-500', textColor: 'text-orange-600' },
-    { label: 'Medium', count: stats.mediumFindings, color: 'bg-amber-400', textColor: 'text-amber-600' },
-    { label: 'Low', count: stats.lowFindings, color: 'bg-blue-500', textColor: 'text-blue-600' },
+    { label: 'Critical', count: stats.criticalFindings, color: 'bg-severity-critical', textColor: 'text-severity-critical' },
+    { label: 'High', count: stats.highFindings, color: 'bg-severity-high', textColor: 'text-severity-high' },
+    { label: 'Medium', count: stats.mediumFindings, color: 'bg-severity-medium', textColor: 'text-severity-medium' },
+    { label: 'Low', count: stats.lowFindings, color: 'bg-severity-low', textColor: 'text-severity-low' },
   ];
 
   return (
@@ -94,7 +94,7 @@ const RecentScans: React.FC<{ scans: Scan[] }> = ({ scans }) => (
     <CardHeader
       title="Recent Scans"
       action={
-        <Link to="/scans" className="text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1">
+        <Link to="/scans" className="text-sm text-industrial-action hover:text-industrial-action-hover font-medium flex items-center gap-1">
           View all <ExternalLink className="w-3.5 h-3.5" />
         </Link>
       }
@@ -121,15 +121,15 @@ const RecentScans: React.FC<{ scans: Scan[] }> = ({ scans }) => (
             <div className="flex items-center space-x-3">
               <div className={clsx(
                 'w-2.5 h-2.5 rounded-full',
-                scan.status === 'COMPLETED' ? 'bg-emerald-500' :
-                  scan.status === 'PROCESSING' ? 'bg-indigo-500 animate-pulse' :
-                    scan.status === 'FAILED' ? 'bg-red-500' : 'bg-slate-400'
+                scan.status === 'COMPLETED' ? 'bg-severity-success' :
+                  scan.status === 'PROCESSING' ? 'bg-industrial-action animate-pulse' :
+                    scan.status === 'FAILED' ? 'bg-severity-critical' : 'bg-gray-400'
               )} />
               <div>
-                <p className="text-sm font-medium text-slate-900">
+                <p className="text-sm font-medium text-gray-900">
                   {scan.scanType?.charAt(0).toUpperCase() + scan.scanType?.slice(1) || 'Standard'} Scan
                 </p>
-                <p className="text-xs text-slate-500 flex items-center gap-1">
+                <p className="text-xs text-gray-500 flex items-center gap-1">
                   <Clock className="w-3 h-3" />
                   {formatDistanceToNow(new Date(scan.startedAt), { addSuffix: true })}
                 </p>
@@ -152,19 +152,19 @@ const RecentScans: React.FC<{ scans: Scan[] }> = ({ scans }) => (
 
 // Quick Actions Component
 const QuickActions: React.FC = () => (
-  <Card className="bg-gradient-to-br from-indigo-600 to-purple-700 border-0 text-white">
-    <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
+  <Card className="bg-industrial-surface border-0 text-white">
+    <h3 className="text-lg font-semibold mb-4 text-industrial-base">Quick Actions</h3>
     <div className="grid grid-cols-2 gap-3">
       {[
         { to: '/new', icon: <Plus className="w-5 h-5" />, label: 'New Project' },
         { to: '/scan/quick', icon: <Zap className="w-5 h-5" />, label: 'Quick Scan' },
-        { to: '/cli', icon: <Terminal className="w-5 h-5" />, label: 'Open CLI' },
+
         { to: '/reports', icon: <BarChart3 className="w-5 h-5" />, label: 'Reports' },
       ].map((action) => (
         <Link
           key={action.to}
           to={action.to}
-          className="flex items-center space-x-2 p-3 rounded-xl bg-white/10 hover:bg-white/20 transition-all hover:scale-[1.02]"
+          className="flex items-center space-x-2 p-3 rounded-industrial bg-white/10 hover:bg-white/20 transition-all hover:scale-[1.02] text-industrial-base"
         >
           {action.icon}
           <span className="text-sm font-medium">{action.label}</span>
@@ -177,10 +177,10 @@ const QuickActions: React.FC = () => (
 // Risk Score Gauge
 const RiskScoreGauge: React.FC<{ score: number }> = ({ score }) => {
   const getColor = (s: number) => {
-    if (s >= 80) return { stroke: '#ef4444', bg: 'bg-red-50', text: 'text-red-600' };
-    if (s >= 60) return { stroke: '#f97316', bg: 'bg-orange-50', text: 'text-orange-600' };
-    if (s >= 40) return { stroke: '#f59e0b', bg: 'bg-amber-50', text: 'text-amber-600' };
-    return { stroke: '#10b981', bg: 'bg-emerald-50', text: 'text-emerald-600' };
+    if (s >= 80) return { stroke: '#ef4444', bg: 'bg-red-50', text: 'text-severity-critical' };
+    if (s >= 60) return { stroke: '#f97316', bg: 'bg-orange-50', text: 'text-severity-high' };
+    if (s >= 40) return { stroke: '#f59e0b', bg: 'bg-amber-50', text: 'text-severity-medium' };
+    return { stroke: '#10b981', bg: 'bg-emerald-50', text: 'text-severity-success' };
   };
 
   const getLabel = (s: number) => {
@@ -268,7 +268,7 @@ const ProjectsList: React.FC<{ projects: Project[] }> = ({ projects }) => (
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
-                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/25">
+                  <div className="w-11 h-11 rounded-industrial bg-industrial-surface flex items-center justify-center">
                     <Shield className="w-5 h-5 text-white" />
                   </div>
                   <div>
@@ -417,31 +417,31 @@ export const Dashboard: React.FC = () => {
         <StatCard
           title="Total Projects"
           value={stats.totalProjects}
-          icon={<Target className="w-6 h-6 text-indigo-600" />}
-          iconBg="bg-indigo-100"
-          gradient="bg-gradient-to-br from-indigo-500 to-purple-500"
+          icon={<Target className="w-6 h-6 text-industrial-action" />}
+          iconBg="bg-industrial-surface/5"
+          gradient=""
         />
         <StatCard
           title="Total Scans"
           value={stats.totalScans}
-          icon={<Activity className="w-6 h-6 text-emerald-600" />}
+          icon={<Activity className="w-6 h-6 text-severity-success" />}
           trend={{ value: 12, positive: true }}
-          iconBg="bg-emerald-100"
-          gradient="bg-gradient-to-br from-emerald-500 to-teal-500"
+          iconBg="bg-severity-success/10"
+          gradient=""
         />
         <StatCard
           title="Open Findings"
           value={stats.totalFindings - stats.findingsFixed}
-          icon={<AlertTriangle className="w-6 h-6 text-amber-600" />}
-          iconBg="bg-amber-100"
-          gradient="bg-gradient-to-br from-amber-500 to-orange-500"
+          icon={<AlertTriangle className="w-6 h-6 text-severity-medium" />}
+          iconBg="bg-severity-medium/10"
+          gradient=""
         />
         <StatCard
           title="Critical Issues"
           value={stats.criticalFindings}
-          icon={<Shield className="w-6 h-6 text-red-600" />}
-          iconBg="bg-red-100"
-          gradient="bg-gradient-to-br from-red-500 to-rose-500"
+          icon={<Shield className="w-6 h-6 text-severity-critical" />}
+          iconBg="bg-severity-critical/10"
+          gradient=""
         />
       </div>
 

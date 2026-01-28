@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Project, Scan } from '../types';
+import type { Project, Scan, User } from '../types';
 
 const api = axios.create({
   baseURL: '/api', // Use relative path to leverage Vite proxy
@@ -64,6 +64,21 @@ export const generateApiKey = async (projectId: string, environment: 'SANDBOX' |
 
 export const deleteApiKey = async (projectId: string, keyId: string) => {
   await api.delete(`/projects/${projectId}/keys/${keyId}`);
+};
+
+export const updateProfile = async (data: { name?: string; email?: string }) => {
+    const response = await api.put<User>('/auth/me', data);
+    return response.data;
+};
+
+export const changePassword = async (data: { currentPassword: string; newPassword: string }) => {
+    const response = await api.put<{ success: true; message: string }>('/auth/password', data);
+    return response.data;
+};
+
+export const deleteAccount = async () => {
+    const response = await api.delete<{ success: true; message: string }>('/auth/me');
+    return response.data;
 };
 
 export default api;

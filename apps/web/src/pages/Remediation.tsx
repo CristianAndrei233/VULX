@@ -67,19 +67,19 @@ interface Pagination {
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-    OPEN: { label: 'Open', color: 'text-red-700', bg: 'bg-red-100' },
-    IN_PROGRESS: { label: 'In Progress', color: 'text-amber-700', bg: 'bg-amber-100' },
-    FIXED: { label: 'Fixed', color: 'text-emerald-700', bg: 'bg-emerald-100' },
+    OPEN: { label: 'Open', color: 'text-severity-critical', bg: 'bg-severity-critical/10' },
+    IN_PROGRESS: { label: 'In Progress', color: 'text-severity-high', bg: 'bg-severity-high/10' },
+    FIXED: { label: 'Fixed', color: 'text-severity-success', bg: 'bg-severity-success/10' },
     FALSE_POSITIVE: { label: 'False Positive', color: 'text-slate-700', bg: 'bg-slate-100' },
-    ACCEPTED: { label: 'Accepted', color: 'text-purple-700', bg: 'bg-purple-100' },
+    ACCEPTED: { label: 'Accepted', color: 'text-severity-medium', bg: 'bg-severity-medium/10' },
 };
 
 const TICKET_STATUS_COLORS: Record<string, string> = {
-    'Open': 'bg-blue-100 text-blue-700',
-    'In Progress': 'bg-amber-100 text-amber-700',
-    'Done': 'bg-emerald-100 text-emerald-700',
+    'Open': 'bg-industrial-surface-hover/10 text-industrial-surface',
+    'In Progress': 'bg-severity-high/10 text-severity-high',
+    'Done': 'bg-severity-success/10 text-severity-success',
     'Closed': 'bg-slate-100 text-slate-700',
-    'Todo': 'bg-indigo-100 text-indigo-700',
+    'Todo': 'bg-industrial-action/10 text-industrial-action',
 };
 
 export function Remediation() {
@@ -179,37 +179,37 @@ export function Remediation() {
                         <p className="text-sm font-medium text-slate-500">Total Findings</p>
                         <p className="text-3xl font-bold text-slate-900 mt-1">{stats.total}</p>
                     </Card>
-                    <Card hoverable className="border-l-4 border-l-red-500">
+                    <Card hoverable className="border-l-4 border-l-severity-critical">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm font-medium text-red-600">Open</p>
-                                <p className="text-3xl font-bold text-red-700 mt-1">{stats.open}</p>
+                                <p className="text-sm font-medium text-severity-critical">Open</p>
+                                <p className="text-3xl font-bold text-severity-critical mt-1">{stats.open}</p>
                             </div>
-                            <AlertTriangle className="w-8 h-8 text-red-200" />
+                            <AlertTriangle className="w-8 h-8 text-severity-critical/30" />
                         </div>
                     </Card>
-                    <Card hoverable className="border-l-4 border-l-amber-500">
+                    <Card hoverable className="border-l-4 border-l-severity-high">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm font-medium text-amber-600">In Progress</p>
-                                <p className="text-3xl font-bold text-amber-700 mt-1">{stats.inProgress}</p>
+                                <p className="text-sm font-medium text-severity-high">In Progress</p>
+                                <p className="text-3xl font-bold text-severity-high mt-1">{stats.inProgress}</p>
                             </div>
-                            <Clock className="w-8 h-8 text-amber-200" />
+                            <Clock className="w-8 h-8 text-severity-high/30" />
                         </div>
                     </Card>
-                    <Card hoverable className="border-l-4 border-l-emerald-500">
+                    <Card hoverable className="border-l-4 border-l-severity-success">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm font-medium text-emerald-600">Fixed</p>
-                                <p className="text-3xl font-bold text-emerald-700 mt-1">{stats.fixed}</p>
+                                <p className="text-sm font-medium text-severity-success">Fixed</p>
+                                <p className="text-3xl font-bold text-severity-success mt-1">{stats.fixed}</p>
                             </div>
-                            <CheckCircle className="w-8 h-8 text-emerald-200" />
+                            <CheckCircle className="w-8 h-8 text-severity-success/30" />
                         </div>
                     </Card>
-                    <Card hoverable className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
+                    <Card hoverable className="bg-industrial-surface text-white">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm font-medium text-indigo-100">Fixed (30d)</p>
+                                <p className="text-sm font-medium text-industrial-base">Fixed (30d)</p>
                                 <p className="text-3xl font-bold mt-1">{stats.fixedLast30Days}</p>
                             </div>
                             <TrendingUp className="w-8 h-8 text-white/30" />
@@ -225,7 +225,7 @@ export function Remediation() {
                     className={clsx(
                         'px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors',
                         activeTab === 'findings'
-                            ? 'border-indigo-500 text-indigo-600'
+                            ? 'border-industrial-action text-industrial-action'
                             : 'border-transparent text-slate-500 hover:text-slate-700'
                     )}
                 >
@@ -237,7 +237,7 @@ export function Remediation() {
                     className={clsx(
                         'px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors',
                         activeTab === 'comparison'
-                            ? 'border-indigo-500 text-indigo-600'
+                            ? 'border-industrial-action text-industrial-action'
                             : 'border-transparent text-slate-500 hover:text-slate-700'
                     )}
                 >
@@ -256,10 +256,10 @@ export function Remediation() {
                                 {Object.entries(stats.bySeverity).map(([severity, count]) => {
                                     const percentage = stats.open > 0 ? (count / stats.open) * 100 : 0;
                                     const colors: Record<string, string> = {
-                                        critical: 'bg-red-500',
-                                        high: 'bg-orange-500',
-                                        medium: 'bg-amber-400',
-                                        low: 'bg-blue-500',
+                                        critical: 'bg-severity-critical',
+                                        high: 'bg-severity-high',
+                                        medium: 'bg-severity-medium',
+                                        low: 'bg-severity-low',
                                         info: 'bg-slate-400'
                                     };
                                     return (
@@ -289,7 +289,7 @@ export function Remediation() {
                             <select
                                 value={statusFilter}
                                 onChange={(e) => setStatusFilter(e.target.value)}
-                                className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                                className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-industrial focus:outline-none focus:ring-2 focus:ring-industrial-action text-sm"
                             >
                                 <option value="all">All Statuses</option>
                                 <option value="OPEN">Open</option>
@@ -301,7 +301,7 @@ export function Remediation() {
                             <select
                                 value={severityFilter}
                                 onChange={(e) => setSeverityFilter(e.target.value)}
-                                className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                                className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-industrial focus:outline-none focus:ring-2 focus:ring-industrial-action text-sm"
                             >
                                 <option value="all">All Severities</option>
                                 <option value="CRITICAL">Critical</option>
@@ -359,7 +359,7 @@ export function Remediation() {
                                                         {finding.scan?.project ? (
                                                             <Link
                                                                 to={`/projects/${finding.scan.project.id}`}
-                                                                className="text-sm text-indigo-600 hover:underline flex items-center gap-1"
+                                                                className="text-sm text-industrial-action hover:underline flex items-center gap-1"
                                                             >
                                                                 {finding.scan.project.name}
                                                                 <ExternalLink className="w-3 h-3" />
@@ -381,8 +381,8 @@ export function Remediation() {
                                                                 rel="noopener noreferrer"
                                                                 className="inline-flex items-center gap-1.5 text-xs"
                                                             >
-                                                                <Ticket className="w-3.5 h-3.5 text-indigo-500" />
-                                                                <span className="text-indigo-600 hover:underline">{finding.ticketId}</span>
+                                                                <Ticket className="w-3.5 h-3.5 text-industrial-action" />
+                                                                <span className="text-industrial-action hover:underline">{finding.ticketId}</span>
                                                                 {finding.ticketStatus && (
                                                                     <span className={clsx('px-1.5 py-0.5 rounded text-xs font-medium', ticketStatusClass)}>
                                                                         {finding.ticketStatus}
@@ -449,7 +449,7 @@ export function Remediation() {
                                     value={scanIds.after}
                                     onChange={(e) => setScanIds(s => ({ ...s, after: e.target.value }))}
                                     placeholder="Enter scan ID..."
-                                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-industrial focus:outline-none focus:ring-2 focus:ring-industrial-action text-sm"
                                 />
                             </div>
                             <Button
@@ -465,7 +465,7 @@ export function Remediation() {
                     {comparison && (
                         <div className="grid md:grid-cols-2 gap-6">
                             {/* New Findings */}
-                            <Card className="border-l-4 border-l-red-500">
+                            <Card className="border-l-4 border-l-severity-critical">
                                 <CardHeader
                                     title={`New Findings (${comparison.newFindings.length})`}
                                     subtitle="Vulnerabilities introduced in the new scan"
@@ -496,7 +496,7 @@ export function Remediation() {
                             </Card>
 
                             {/* Fixed Findings */}
-                            <Card className="border-l-4 border-l-emerald-500">
+                            <Card className="border-l-4 border-l-severity-success">
                                 <CardHeader
                                     title={`Fixed Findings (${comparison.fixedFindings.length})`}
                                     subtitle="Vulnerabilities resolved since last scan"

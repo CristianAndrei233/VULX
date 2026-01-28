@@ -309,11 +309,11 @@ export const CLITerminal: React.FC = () => {
 
   const getLineColor = (type: TerminalLine['type']) => {
     switch (type) {
-      case 'input': return 'text-green-400';
+      case 'input': return 'text-industrial-base';
       case 'output': return 'text-gray-300';
-      case 'error': return 'text-red-400';
-      case 'success': return 'text-green-400';
-      case 'info': return 'text-blue-400';
+      case 'error': return 'text-severity-critical';
+      case 'success': return 'text-severity-success';
+      case 'info': return 'text-severity-medium';
       default: return 'text-gray-300';
     }
   };
@@ -321,12 +321,12 @@ export const CLITerminal: React.FC = () => {
   return (
     <div className={`flex flex-col ${isFullscreen ? 'fixed inset-0 z-50' : 'h-[600px]'}`}>
       {/* Header */}
-      <div className="bg-gray-800 px-4 py-2 flex items-center justify-between rounded-t-lg">
+      <div className="bg-industrial-surface-hover px-4 py-2 flex items-center justify-between rounded-t-lg border-b border-black/20">
         <div className="flex items-center space-x-3">
           <div className="flex space-x-2">
-            <div className="w-3 h-3 rounded-full bg-red-500" />
-            <div className="w-3 h-3 rounded-full bg-yellow-500" />
-            <div className="w-3 h-3 rounded-full bg-green-500" />
+            <div className="w-3 h-3 rounded-full bg-severity-critical" />
+            <div className="w-3 h-3 rounded-full bg-severity-high" />
+            <div className="w-3 h-3 rounded-full bg-severity-success" />
           </div>
           <div className="flex items-center space-x-2 text-gray-400">
             <Terminal className="w-4 h-4" />
@@ -336,28 +336,28 @@ export const CLITerminal: React.FC = () => {
         <div className="flex items-center space-x-2">
           <button
             onClick={copyToClipboard}
-            className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700 rounded"
+            className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded"
             title="Copy output"
           >
             <Copy className="w-4 h-4" />
           </button>
           <button
             onClick={downloadOutput}
-            className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700 rounded"
+            className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded"
             title="Download output"
           >
             <Download className="w-4 h-4" />
           </button>
           <button
             onClick={() => setLines([])}
-            className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700 rounded"
+            className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded"
             title="Clear terminal"
           >
             <Trash2 className="w-4 h-4" />
           </button>
           <button
             onClick={() => setIsFullscreen(!isFullscreen)}
-            className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700 rounded"
+            className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded"
             title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
           >
             {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
@@ -369,7 +369,7 @@ export const CLITerminal: React.FC = () => {
       <div
         ref={terminalRef}
         onClick={handleTerminalClick}
-        className={`flex-1 bg-gray-900 p-4 overflow-y-auto font-mono text-sm ${isFullscreen ? '' : 'rounded-b-lg'
+        className={`flex-1 bg-industrial-surface p-4 overflow-y-auto font-mono text-sm ${isFullscreen ? '' : 'rounded-b-lg'
           }`}
         style={{ minHeight: '400px' }}
       >

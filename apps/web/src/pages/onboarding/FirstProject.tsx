@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { ArrowLeft, ArrowRight, FolderPlus, Link, FileCode } from 'lucide-react';
+import { ArrowLeft, ArrowRight, FolderPlus, Link, FileCode, Shield } from 'lucide-react';
 import { useOnboarding } from '../../context/OnboardingContext';
+import { Button } from '../../components/ui';
+import { clsx } from 'clsx';
 
 type InputMethod = 'url' | 'paste';
 
@@ -17,13 +19,13 @@ export function FirstProject() {
     const newErrors: { name?: string; spec?: string } = {};
 
     if (!projectName.trim()) {
-      newErrors.name = 'Project name is required';
+      newErrors.name = 'Project identifier required';
     }
 
     if (inputMethod === 'url' && !specUrl.trim()) {
-      newErrors.spec = 'OpenAPI specification URL is required';
+      newErrors.spec = 'Specification endpoint required';
     } else if (inputMethod === 'paste' && !specContent.trim()) {
-      newErrors.spec = 'OpenAPI specification content is required';
+      newErrors.spec = 'Payload content required';
     }
 
     setErrors(newErrors);
@@ -42,7 +44,7 @@ export function FirstProject() {
       await completeOnboarding();
       nextStep();
     } catch {
-      setErrors({ spec: 'Failed to create project. Please try again.' });
+      setErrors({ spec: 'Protocol failed. Retrying...' });
     } finally {
       setIsLoading(false);
     }
@@ -59,24 +61,28 @@ export function FirstProject() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
-      <div className="max-w-lg w-full">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600/20 rounded-full mb-4">
-            <FolderPlus className="w-8 h-8 text-blue-400" />
+    <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-8 font-sans overflow-hidden relative">
+      {/* Dark Ambient Visuals */}
+      <div className="absolute top-[-10%] left-[-5%] w-[50%] h-[50%] bg-primary-950/30 rounded-full blur-[140px] opacity-40" />
+      <div className="absolute bottom-[-10%] right-[-5%] w-[40%] h-[40%] bg-indigo-950/20 rounded-full blur-[120px] opacity-30" />
+      <div className="absolute inset-0 opacity-[0.03]" style={{
+        backgroundImage: `linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)`,
+        backgroundSize: '40px 40px'
+      }} />
+
+      <div className="max-w-xl w-full relative z-10">
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-primary-500/10 rounded-[28px] mb-6 shadow-xl border border-primary-500/20">
+            <FolderPlus className="w-10 h-10 text-primary-500" />
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">
-            Create your first project
-          </h1>
-          <p className="text-slate-400">
-            Connect your API specification to start scanning for vulnerabilities
-          </p>
+          <h1 className="text-4xl font-black text-white mb-2 tracking-tight uppercase">Init Project</h1>
+          <p className="text-zinc-500 font-bold uppercase tracking-widest text-[10px]">Define Target API Specification</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label htmlFor="projectName" className="block text-sm font-medium text-slate-300 mb-2">
-              Project Name
+        <form onSubmit={handleSubmit} className="space-y-8 p-10 bg-zinc-900 border border-zinc-800 rounded-[44px] shadow-2xl">
+          <div className="space-y-2">
+            <label htmlFor="projectName" className="block text-[11px] font-black text-zinc-500 uppercase tracking-widest ml-1">
+              Project Identifier
             </label>
             <input
               type="text"
@@ -86,60 +92,67 @@ export function FirstProject() {
                 setProjectName(e.target.value);
                 setErrors(prev => ({ ...prev, name: undefined }));
               }}
-              className={`w-full px-4 py-3 bg-slate-800 border rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                errors.name ? 'border-red-500' : 'border-slate-700'
-              }`}
-              placeholder="My API"
+              className={clsx(
+                "w-full px-6 py-4 bg-zinc-950 border rounded-2xl text-white font-bold placeholder-zinc-700 focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500/50 transition-all",
+                errors.name ? "border-red-900" : "border-zinc-800 shadow-inner"
+              )}
+              placeholder="e.g. Nexus-Gateway"
             />
             {errors.name && (
-              <p className="mt-1 text-sm text-red-400">{errors.name}</p>
+              <p className="mt-1 text-[10px] font-black text-red-500 uppercase tracking-tight ml-1">{errors.name}</p>
             )}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              OpenAPI Specification
+          <div className="space-y-4">
+            <label className="block text-[11px] font-black text-zinc-500 uppercase tracking-widest ml-1">
+              OpenAPI Manifest Method
             </label>
-            <div className="flex gap-2 mb-3">
+            <div className="flex gap-3">
               <button
                 type="button"
                 onClick={() => setInputMethod('url')}
-                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
+                className={clsx(
+                  "flex-1 flex items-center justify-center gap-3 px-4 py-4 rounded-2xl border-2 transition-all duration-300 font-black text-[10px] uppercase tracking-widest",
                   inputMethod === 'url'
-                    ? 'bg-blue-600/20 border-blue-500 text-blue-400'
-                    : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-600'
-                }`}
+                    ? "bg-primary-500/10 border-primary-500 text-primary-400 shadow-lg shadow-primary-500/10"
+                    : "bg-zinc-950 border-zinc-800 text-zinc-600 hover:border-zinc-700"
+                )}
               >
                 <Link className="w-4 h-4" />
-                URL
+                Network URL
               </button>
               <button
                 type="button"
                 onClick={() => setInputMethod('paste')}
-                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
+                className={clsx(
+                  "flex-1 flex items-center justify-center gap-3 px-4 py-4 rounded-2xl border-2 transition-all duration-300 font-black text-[10px] uppercase tracking-widest",
                   inputMethod === 'paste'
-                    ? 'bg-blue-600/20 border-blue-500 text-blue-400'
-                    : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-600'
-                }`}
+                    ? "bg-primary-500/10 border-primary-500 text-primary-400 shadow-lg shadow-primary-500/10"
+                    : "bg-zinc-950 border-zinc-800 text-zinc-600 hover:border-zinc-700"
+                )}
               >
                 <FileCode className="w-4 h-4" />
-                Paste
+                Raw Payload
               </button>
             </div>
 
             {inputMethod === 'url' ? (
-              <input
-                type="url"
-                value={specUrl}
-                onChange={(e) => {
-                  setSpecUrl(e.target.value);
-                  setErrors(prev => ({ ...prev, spec: undefined }));
-                }}
-                className={`w-full px-4 py-3 bg-slate-800 border rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.spec ? 'border-red-500' : 'border-slate-700'
-                }`}
-                placeholder="https://api.example.com/openapi.yaml"
-              />
+              <div className="relative group">
+                <Shield className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-700 group-focus-within:text-primary-500 transition-colors" />
+                <input
+                  type="url"
+                  value={specUrl}
+                  onChange={(e) => {
+                    setSpecUrl(e.target.value);
+                    setErrors(prev => ({ ...prev, spec: undefined }));
+                  }}
+                  className={clsx(
+                    "w-full pl-11 pr-6 py-4 bg-zinc-950 border rounded-2xl text-white font-bold placeholder-zinc-700 focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500/50 transition-all",
+                    errors.spec ? "border-red-900" : "border-zinc-800 shadow-inner"
+                  )}
+                  placeholder="https://schema.nexus.io/v1"
+                />
+              </div>
             ) : (
               <textarea
                 value={specContent}
@@ -147,52 +160,55 @@ export function FirstProject() {
                   setSpecContent(e.target.value);
                   setErrors(prev => ({ ...prev, spec: undefined }));
                 }}
-                rows={8}
-                className={`w-full px-4 py-3 bg-slate-800 border rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm ${
-                  errors.spec ? 'border-red-500' : 'border-slate-700'
-                }`}
-                placeholder="openapi: 3.0.0&#10;info:&#10;  title: My API&#10;  version: 1.0.0&#10;paths:&#10;  /users:&#10;    get:&#10;      ..."
+                rows={6}
+                className={clsx(
+                  "w-full px-6 py-4 bg-zinc-950 border rounded-2xl text-primary-400 font-mono text-[11px] placeholder-zinc-800 focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500/50 transition-all",
+                  errors.spec ? "border-red-900" : "border-zinc-800 shadow-inner"
+                )}
+                placeholder="openapi: 3.0.0..."
               />
             )}
             {errors.spec && (
-              <p className="mt-1 text-sm text-red-400">{errors.spec}</p>
+              <p className="mt-1 text-[10px] font-black text-red-500 uppercase tracking-tight ml-1">{errors.spec}</p>
             )}
           </div>
 
           <div className="flex gap-4 pt-4">
-            <button
+            <Button
               type="button"
+              variant="secondary"
               onClick={prevStep}
-              className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 bg-slate-700 text-white font-medium rounded-lg hover:bg-slate-600 transition-colors"
+              className="flex-1 py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] border-zinc-800 text-zinc-500 hover:bg-zinc-800"
               disabled={isLoading}
+              leftIcon={<ArrowLeft className="w-4 h-4" />}
             >
-              <ArrowLeft className="w-4 h-4" />
               Back
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
-              className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+              className="flex-1 py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary-500/20"
               disabled={isLoading}
+              isLoading={isLoading}
+              rightIcon={<ArrowRight className="w-4 h-4" />}
             >
-              {isLoading ? 'Creating...' : 'Create Project'}
-              <ArrowRight className="w-4 h-4" />
-            </button>
+              Commit Data
+            </Button>
           </div>
 
           <div className="text-center">
             <button
               type="button"
               onClick={handleSkip}
-              className="text-sm text-slate-400 hover:text-slate-300 transition-colors"
+              className="text-[10px] font-black text-zinc-600 hover:text-primary-500 transition-colors uppercase tracking-[0.2em]"
               disabled={isLoading}
             >
-              Skip for now
+              Skip Init Sequence
             </button>
           </div>
         </form>
 
-        <div className="mt-8">
-          <StepIndicator current={5} total={5} />
+        <div className="mt-12 flex flex-col items-center gap-6">
+          <StepIndicator current={5} total={6} />
         </div>
       </div>
     </div>
@@ -201,13 +217,12 @@ export function FirstProject() {
 
 function StepIndicator({ current, total }: { current: number; total: number }) {
   return (
-    <div className="flex justify-center gap-2">
+    <div className="flex justify-center gap-4">
       {Array.from({ length: total }, (_, i) => (
         <div
           key={i}
-          className={`w-2 h-2 rounded-full transition-colors ${
-            i + 1 <= current ? 'bg-blue-500' : 'bg-slate-700'
-          }`}
+          className={`h-1 rounded-full transition-all duration-700 ${i + 1 <= current ? 'bg-primary-500 w-8 shadow-[0_0_8px_rgba(99,102,241,0.5)]' : 'bg-zinc-800 w-4 opacity-40'
+            }`}
         />
       ))}
     </div>

@@ -2,104 +2,99 @@ import React from 'react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
-export type BadgeVariant = 'default' | 'success' | 'warning' | 'error' | 'info' | 'primary' | 'danger' | 'critical' | 'high';
-export type BadgeSize = 'sm' | 'md' | 'lg';
+// Badge Variants
+export type BadgeVariant =
+    | 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'info'
+    | 'critical' | 'high' | 'medium' | 'low' | 'neutral';
 
 export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
     variant?: BadgeVariant;
-    size?: BadgeSize;
+    size?: 'xs' | 'sm' | 'md';
+    pulse?: boolean;
     icon?: React.ReactNode;
 }
 
-export type StatusType = 'COMPLETED' | 'FAILED' | 'RUNNING' | 'PENDING' | 'STOPPED';
-export type SeverityType = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW' | 'INFO';
-
-export interface StatusBadgeProps {
-    status: StatusType | string;
-    size?: BadgeSize;
-}
-
-export interface SeverityBadgeProps {
-    severity: SeverityType | string;
-    size?: BadgeSize;
-}
-
-const variants: Record<BadgeVariant, string> = {
-    default: 'bg-industrial-code text-gray-700 border border-gray-200',
-    success: 'bg-severity-success/10 text-severity-success border border-severity-success/20',
-    warning: 'bg-severity-high/10 text-severity-high border border-severity-high/20',
-    error: 'bg-severity-critical/10 text-severity-critical border border-severity-critical/20',
-    info: 'bg-severity-medium/10 text-severity-medium border border-severity-medium/20',
-
-    // Aliases
-    primary: 'bg-industrial-code text-gray-700 border border-gray-200',
-    danger: 'bg-severity-critical/10 text-severity-critical border border-severity-critical/20',
-    critical: 'bg-severity-critical/10 text-severity-critical border border-severity-critical/20',
-    high: 'bg-severity-high/10 text-severity-high border border-severity-high/20',
-};
-
-const sizes = {
-    sm: 'px-2 py-0.5 text-xs rounded-industrial',
-    md: 'px-2.5 py-0.5 text-sm rounded-industrial',
-    lg: 'px-3 py-1 text-base rounded-industrial',
-};
-
 export const Badge: React.FC<BadgeProps> = ({
     children,
-    variant = 'default',
-    size = 'md',
+    variant = 'primary',
+    size = 'sm',
+    pulse = false,
     icon,
     className,
     ...props
 }) => {
+    const baseStyles = 'inline-flex items-center font-semibold rounded-full transition-all duration-200';
+
+    const variants: Record<BadgeVariant, string> = {
+        primary: 'bg-primary-100 text-primary-700 border border-primary-200',
+        secondary: 'bg-stone-100 text-stone-700 border border-stone-200',
+        success: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+        warning: 'bg-amber-50 text-amber-700 border border-amber-200',
+        danger: 'bg-rose-50 text-rose-700 border border-rose-200',
+        info: 'bg-sky-50 text-sky-700 border border-sky-200',
+        critical: 'bg-gradient-to-r from-rose-500 to-rose-600 text-white border-0 shadow-sm',
+        high: 'bg-gradient-to-r from-orange-500 to-orange-600 text-white border-0 shadow-sm',
+        medium: 'bg-gradient-to-r from-amber-400 to-amber-500 text-amber-900 border-0 shadow-sm',
+        low: 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border-0 shadow-sm',
+        neutral: 'bg-stone-100 text-stone-600 border border-stone-200',
+    };
+
+    const sizes = {
+        xs: 'px-1.5 py-0.5 text-[10px] gap-1',
+        sm: 'px-2.5 py-1 text-xs gap-1.5',
+        md: 'px-3 py-1.5 text-sm gap-2',
+    };
+
+    const pulseStyles = pulse ? 'animate-pulse' : '';
+
     return (
         <span
             className={twMerge(
-                clsx(
-                    'inline-flex items-center font-medium',
-                    variants[variant] || variants.default,
-                    sizes[size],
-                    className
-                )
+                clsx(baseStyles, variants[variant], sizes[size], pulseStyles, className)
             )}
             {...props}
         >
-            {icon && <span className="mr-1.5">{icon}</span>}
+            {icon && <span className="flex-shrink-0">{icon}</span>}
             {children}
         </span>
     );
 };
 
 // Status Badge Component
-export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, size = 'md' }) => {
-    const s = String(status).toUpperCase();
-    let variant: BadgeVariant = 'default';
+export type StatusType = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'ACTIVE' | 'INACTIVE';
 
-    if (s === 'COMPLETED' || s === 'SUCCESS' || s === 'FINISHED') variant = 'success';
-    else if (s === 'FAILED' || s === 'ERROR') variant = 'error';
-    else if (s === 'RUNNING' || s === 'IN_PROGRESS' || s === 'SCANNING') variant = 'info';
-    else if (s === 'PENDING' || s === 'QUEUED') variant = 'warning';
+export interface StatusBadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
+    status: StatusType | string;
+    size?: 'xs' | 'sm' | 'md';
+    showDot?: boolean;
+}
+
+export const StatusBadge: React.FC<StatusBadgeProps> = ({
+    status,
+    size = 'sm',
+    showDot = true,
+    className,
+    ...props
+}) => {
+    const statusConfig: Record<string, { variant: BadgeVariant; label: string; dotColor: string }> = {
+        PENDING: { variant: 'neutral', label: 'Pending', dotColor: 'bg-stone-400' },
+        PROCESSING: { variant: 'primary', label: 'Processing', dotColor: 'bg-primary-500 animate-pulse' },
+        COMPLETED: { variant: 'success', label: 'Completed', dotColor: 'bg-emerald-500' },
+        FAILED: { variant: 'danger', label: 'Failed', dotColor: 'bg-rose-500' },
+        ACTIVE: { variant: 'success', label: 'Active', dotColor: 'bg-emerald-500' },
+        INACTIVE: { variant: 'neutral', label: 'Inactive', dotColor: 'bg-stone-400' },
+    };
+
+    const config = statusConfig[status] || { variant: 'neutral' as BadgeVariant, label: status, dotColor: 'bg-stone-400' };
 
     return (
-        <Badge variant={variant} size={size} className="uppercase tracking-wider font-bold">
-            {status}
+        <Badge variant={config.variant} size={size} className={className} {...props}>
+            {showDot && (
+                <span className={clsx('w-1.5 h-1.5 rounded-full', config.dotColor)} />
+            )}
+            {config.label}
         </Badge>
     );
 };
 
-// Severity Badge Component
-export const SeverityBadge: React.FC<SeverityBadgeProps> = ({ severity, size = 'md' }) => {
-    const s = String(severity).toUpperCase();
-    let variant: BadgeVariant = 'info';
 
-    if (s === 'CRITICAL') variant = 'error';
-    else if (s === 'HIGH') variant = 'warning';
-    else if (s === 'MEDIUM') variant = 'info'; // Medium checks to info (Teal)
-    else if (s === 'LOW') variant = 'success'; // Low checks to Moss
-
-    return (
-        <Badge variant={variant} size={size} className="uppercase tracking-wider font-bold">
-            {severity}
-        </Badge>
-    );
-};

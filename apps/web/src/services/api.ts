@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Project, Scan, User } from '../types';
+import type { Project, Scan, User, Finding } from '../types';
 
 const api = axios.create({
   baseURL: '/api', // Use relative path to leverage Vite proxy
@@ -20,6 +20,8 @@ api.interceptors.request.use((config) => {
 // No changes needed for method bodies as they use relative paths like '/projects'
 // which will now map to '/api/projects' correctly.
 export const getProjects = async () => {
+    // ...
+
   const response = await api.get<Project[]>('/projects');
   // Correction: We don't have a list-all endpoint yet, only get-by-id.
   // We should add one, or use a hardcoded list for now?
@@ -78,6 +80,26 @@ export const changePassword = async (data: { currentPassword: string; newPasswor
 
 export const deleteAccount = async () => {
     const response = await api.delete<{ success: true; message: string }>('/auth/me');
+    return response.data;
+};
+
+export const getScan = async (scanId: string) => {
+    const response = await api.get<Scan>(`/scans/${scanId}`);
+    return response.data;
+};
+
+export const getScanFindings = async (scanId: string) => {
+    const response = await api.get<Finding[]>(`/scans/${scanId}/findings`);
+    return response.data;
+};
+
+export const getProjectScans = async (projectId: string) => {
+    const response = await api.get<Scan[]>(`/projects/${projectId}/scans`);
+    return response.data;
+};
+
+export const getAllScans = async () => {
+    const response = await api.get<Scan[]>('/scans');
     return response.data;
 };
 

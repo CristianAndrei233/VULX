@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
   Shield,
@@ -14,140 +14,17 @@ import {
   Search,
   CheckCircle,
   AlertTriangle,
-  Info
+  Info,
+  Zap,
+  Activity
 } from 'lucide-react';
-import type { Finding } from '../types';
-import { Card, Button, Badge, SeverityBadge } from '../components/ui';
+import type { Finding, Scan } from '../types';
+import { Card, Button, SeverityBadge, StatCard } from '../components/ui';
 import { clsx } from 'clsx';
-
-// Sample data for demonstration
-const sampleFindings: Finding[] = [
-  {
-    id: '1',
-    scanId: 'scan-1',
-    engine: 'zap',
-    type: 'SQL_INJECTION',
-    severity: 'CRITICAL',
-    confidence: 'HIGH',
-    title: 'SQL Injection in User Query',
-    description: 'The application appears to be vulnerable to SQL injection attacks. The user ID parameter is being concatenated directly into the SQL query without proper sanitization.',
-    endpoint: '/api/users/{id}',
-    method: 'GET',
-    parameter: 'id',
-    evidence: "Input: ' OR '1'='1' -- \nResponse contains multiple user records",
-    request: "GET /api/users/' OR '1'='1' -- HTTP/1.1\nHost: api.example.com",
-    response: "HTTP/1.1 200 OK\n{\"users\": [...multiple records...]}",
-    remediation: 'Use parameterized queries or prepared statements instead of string concatenation.',
-    codeExample: `// Before (Vulnerable)
-const query = \`SELECT * FROM users WHERE id = '\${userId}'\`;
-
-// After (Safe)
-const query = 'SELECT * FROM users WHERE id = $1';
-const result = await db.query(query, [userId]);`,
-    owaspCategory: 'API8:2023 - Security Misconfiguration',
-    cweId: 'CWE-89',
-    cvssScore: 9.8,
-    complianceMappings: {
-      soc2: ['CC6.1'],
-      pci_dss: ['6.5.1'],
-      gdpr: ['Art. 32']
-    },
-    status: 'OPEN',
-    references: ['https://owasp.org/www-community/attacks/SQL_Injection'],
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: '2',
-    scanId: 'scan-1',
-    engine: 'nuclei',
-    type: 'BROKEN_AUTHENTICATION',
-    severity: 'HIGH',
-    confidence: 'HIGH',
-    title: 'Missing Rate Limiting on Login Endpoint',
-    description: 'The login endpoint does not implement rate limiting, making it vulnerable to brute force attacks.',
-    endpoint: '/api/auth/login',
-    method: 'POST',
-    evidence: 'Successfully sent 100 login attempts within 10 seconds without being blocked.',
-    remediation: 'Implement rate limiting on authentication endpoints.',
-    codeExample: `const rateLimit = require('express-rate-limit');
-const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 5,
-  message: 'Too many login attempts'
-});
-app.post('/api/auth/login', loginLimiter, loginHandler);`,
-    owaspCategory: 'API4:2023 - Unrestricted Resource Consumption',
-    cweId: 'CWE-307',
-    cvssScore: 7.5,
-    status: 'OPEN',
-    references: [],
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: '3',
-    scanId: 'scan-1',
-    engine: 'schemathesis',
-    type: 'BOLA',
-    severity: 'HIGH',
-    confidence: 'MEDIUM',
-    title: 'Broken Object Level Authorization',
-    description: 'User can access other users\' data by changing the ID parameter in the request.',
-    endpoint: '/api/users/{id}/profile',
-    method: 'GET',
-    parameter: 'id',
-    evidence: 'Authenticated as user_123, successfully accessed profile of user_456',
-    remediation: 'Implement proper authorization checks.',
-    owaspCategory: 'API1:2023 - Broken Object Level Authorization',
-    cweId: 'CWE-639',
-    cvssScore: 8.1,
-    status: 'OPEN',
-    references: [],
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: '4',
-    scanId: 'scan-1',
-    engine: 'zap',
-    type: 'SECURITY_MISCONFIGURATION',
-    severity: 'MEDIUM',
-    confidence: 'HIGH',
-    title: 'Missing Security Headers',
-    description: 'Several important security headers are missing from API responses.',
-    endpoint: '/api/*',
-    method: 'GET',
-    evidence: 'Missing headers: X-Content-Type-Options, X-Frame-Options, Content-Security-Policy',
-    remediation: 'Add security headers to all API responses.',
-    owaspCategory: 'API8:2023 - Security Misconfiguration',
-    cweId: 'CWE-693',
-    cvssScore: 5.3,
-    status: 'OPEN',
-    references: [],
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: '5',
-    scanId: 'scan-1',
-    engine: 'nuclei',
-    type: 'INFORMATION_DISCLOSURE',
-    severity: 'LOW',
-    confidence: 'HIGH',
-    title: 'Verbose Error Messages',
-    description: 'Error responses include stack traces and internal implementation details.',
-    endpoint: '/api/users/invalid',
-    method: 'GET',
-    evidence: 'Error response includes stack trace',
-    remediation: 'Implement proper error handling.',
-    owaspCategory: 'API8:2023 - Security Misconfiguration',
-    cweId: 'CWE-209',
-    cvssScore: 3.7,
-    status: 'OPEN',
-    references: [],
-    createdAt: new Date().toISOString()
-  }
-];
+import { getScan, getScanFindings } from '../services/api';
 
 const engineIcons: Record<string, React.ReactNode> = {
-  zap: <Shield className="w-4 h-4" />,
+  zap: <Zap className="w-4 h-4" />,
   nuclei: <Target className="w-4 h-4" />,
   schemathesis: <Bug className="w-4 h-4" />,
   owasp_scanner: <Shield className="w-4 h-4" />
@@ -163,11 +40,11 @@ const FindingCard: React.FC<{
   const [copied, setCopied] = useState(false);
 
   const severityBorder: Record<string, string> = {
-    CRITICAL: 'border-l-red-500',
-    HIGH: 'border-l-orange-500',
-    MEDIUM: 'border-l-amber-400',
-    LOW: 'border-l-blue-500',
-    INFO: 'border-l-slate-400'
+    CRITICAL: 'border-l-severity-critical',
+    HIGH: 'border-l-severity-high',
+    MEDIUM: 'border-l-severity-medium',
+    LOW: 'border-l-severity-low',
+    INFO: 'border-l-severity-info'
   };
 
   const handleCopy = async (text: string) => {
@@ -178,35 +55,34 @@ const FindingCard: React.FC<{
 
   return (
     <Card
-      variant="default"
-      padding="none"
       className={clsx(
-        'border-l-4 overflow-hidden transition-all',
-        severityBorder[finding.severity] || 'border-l-slate-400'
+        'border-l-4 overflow-hidden transition-all duration-200 p-0',
+        severityBorder[finding.severity] || 'border-l-text-muted',
+        isExpanded ? 'shadow-md' : 'hover:border-border-secondary'
       )}
     >
       {/* Header */}
       <button
         onClick={onToggle}
-        className="w-full px-5 py-4 flex items-center justify-between hover:bg-slate-50/50 transition-colors text-left"
+        className="w-full px-5 py-4 flex items-center justify-between hover:bg-bg-tertiary/50 transition-colors text-left"
       >
-        <div className="flex items-center gap-3 min-w-0">
+        <div className="flex items-center gap-4 min-w-0">
           {isExpanded ? (
-            <ChevronDown className="w-4 h-4 text-slate-400 flex-shrink-0" />
+            <ChevronDown className="w-4 h-4 text-text-muted flex-shrink-0" />
           ) : (
-            <ChevronRight className="w-4 h-4 text-slate-400 flex-shrink-0" />
+            <ChevronRight className="w-4 h-4 text-text-muted flex-shrink-0" />
           )}
-          <SeverityBadge severity={finding.severity} size="sm" />
-          <div className="flex items-center gap-2 text-slate-400">
-            {engineIcons[finding.engine]}
-            <span className="text-xs uppercase font-medium">{finding.engine}</span>
+          <SeverityBadge severity={finding.severity.toLowerCase() as any} />
+          <div className="flex items-center gap-2 text-text-muted">
+            {engineIcons[finding.engine] || <Shield size={16} />}
+            <span className="text-xs uppercase font-semibold tracking-wider">{finding.engine}</span>
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-slate-900 truncate">{finding.title}</p>
+            <p className="text-sm font-semibold text-text-primary truncate">{finding.title}</p>
           </div>
         </div>
         <div className="hidden sm:flex items-center gap-3 flex-shrink-0 ml-4">
-          <code className="text-xs font-mono bg-slate-100 px-2.5 py-1 rounded-md text-slate-600">
+          <code className="text-xs font-mono bg-bg-elevated border border-border-secondary px-2.5 py-1 rounded text-text-muted">
             {finding.method} {finding.endpoint}
           </code>
         </div>
@@ -214,58 +90,61 @@ const FindingCard: React.FC<{
 
       {/* Expanded Content */}
       {isExpanded && (
-        <div className="border-t border-slate-100 animate-fade-in">
+        <div className="border-t border-border-secondary animate-fade-in bg-bg-card/50">
           {/* Tabs */}
-          <div className="flex border-b border-slate-100 bg-slate-50/50">
+          <div className="flex border-b border-border-secondary bg-bg-tertiary/30">
             {(['details', 'evidence', 'remediation'] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={clsx(
-                  'px-5 py-3 text-sm font-medium capitalize transition-colors',
+                  'px-5 py-3 text-sm font-medium capitalize transition-all relative',
                   activeTab === tab
-                    ? 'text-indigo-600 border-b-2 border-indigo-600 bg-white'
-                    : 'text-slate-500 hover:text-slate-700'
+                    ? 'text-accent-primary'
+                    : 'text-text-muted hover:text-text-primary'
                 )}
               >
                 {tab}
+                {activeTab === tab && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent-primary" />
+                )}
               </button>
             ))}
           </div>
 
           {/* Tab Content */}
-          <div className="p-5">
+          <div className="p-6">
             {activeTab === 'details' && (
-              <div className="space-y-5">
+              <div className="space-y-6">
                 <div>
-                  <h4 className="text-sm font-semibold text-slate-700 mb-2">Description</h4>
-                  <p className="text-sm text-slate-600 leading-relaxed">{finding.description}</p>
+                  <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">Description</h4>
+                  <p className="text-sm text-text-secondary leading-relaxed">{finding.description}</p>
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="bg-slate-50 rounded-lg p-3">
-                    <h4 className="text-xs font-medium text-slate-500 uppercase mb-1">OWASP</h4>
-                    <p className="text-sm text-slate-700 font-medium">{finding.owaspCategory || 'N/A'}</p>
+                  <div className="bg-bg-elevated border border-border-secondary rounded-lg p-3">
+                    <h4 className="text-[11px] font-semibold text-text-muted uppercase mb-1">OWASP</h4>
+                    <p className="text-sm text-text-primary font-medium">{finding.owaspCategory || 'N/A'}</p>
                   </div>
-                  <div className="bg-slate-50 rounded-lg p-3">
-                    <h4 className="text-xs font-medium text-slate-500 uppercase mb-1">CWE</h4>
+                  <div className="bg-bg-elevated border border-border-secondary rounded-lg p-3">
+                    <h4 className="text-[11px] font-semibold text-text-muted uppercase mb-1">CWE</h4>
                     {finding.cweId ? (
                       <a
                         href={`https://cwe.mitre.org/data/definitions/${finding.cweId.replace('CWE-', '')}.html`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-sm text-indigo-600 hover:underline flex items-center gap-1 font-medium"
+                        className="text-sm text-accent-primary hover:underline flex items-center gap-1 font-semibold"
                       >
                         {finding.cweId}
                         <ExternalLink className="w-3 h-3" />
                       </a>
                     ) : (
-                      <p className="text-sm text-slate-700">N/A</p>
+                      <p className="text-sm text-text-primary">N/A</p>
                     )}
                   </div>
-                  {finding.cvssScore && (
-                    <div className="bg-slate-50 rounded-industrial p-3">
-                      <h4 className="text-xs font-medium text-slate-500 uppercase mb-1">CVSS Score</h4>
+                  {finding.cvssScore !== undefined && (
+                    <div className="bg-bg-elevated border border-border-secondary rounded-lg p-3">
+                      <h4 className="text-[11px] font-semibold text-text-muted uppercase mb-1">CVSS Score</h4>
                       <p className={clsx(
                         'text-sm font-bold',
                         finding.cvssScore >= 9 ? 'text-severity-critical' :
@@ -277,22 +156,22 @@ const FindingCard: React.FC<{
                     </div>
                   )}
                   {finding.parameter && (
-                    <div className="bg-slate-50 rounded-lg p-3">
-                      <h4 className="text-xs font-medium text-slate-500 uppercase mb-1">Parameter</h4>
-                      <code className="text-sm bg-white px-2 py-0.5 rounded border border-slate-200">{finding.parameter}</code>
+                    <div className="bg-bg-elevated border border-border-secondary rounded-lg p-3">
+                      <h4 className="text-[11px] font-semibold text-text-muted uppercase mb-1">Parameter</h4>
+                      <code className="text-xs bg-bg-tertiary px-1.5 py-0.5 rounded text-text-primary border border-border-secondary font-mono">{finding.parameter}</code>
                     </div>
                   )}
                 </div>
 
                 {finding.complianceMappings && Object.keys(finding.complianceMappings).length > 0 && (
                   <div>
-                    <h4 className="text-sm font-semibold text-slate-700 mb-2">Compliance Mappings</h4>
+                    <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3">Compliance Mappings</h4>
                     <div className="flex flex-wrap gap-2">
                       {Object.entries(finding.complianceMappings).map(([framework, controls]) =>
                         controls?.map((control) => (
-                          <Badge key={`${framework}-${control}`} variant="info" size="sm">
+                          <span key={`${framework}-${control}`} className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-bg-elevated text-text-secondary border border-border-secondary">
                             {framework.toUpperCase()}: {control}
-                          </Badge>
+                          </span>
                         ))
                       )}
                     </div>
@@ -302,69 +181,75 @@ const FindingCard: React.FC<{
             )}
 
             {activeTab === 'evidence' && (
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {finding.evidence && (
                   <div>
-                    <h4 className="text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                      <AlertTriangle className="w-4 h-4 text-amber-500" />
+                    <h4 className="text-sm font-semibold text-text-primary mb-3 flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4 text-severity-medium" />
                       Evidence
                     </h4>
-                    <pre className="text-sm bg-slate-900 text-slate-100 p-4 rounded-lg overflow-x-auto font-mono">
+                    <pre className="text-xs bg-bg-base border border-border-secondary text-text-secondary p-4 rounded-lg overflow-x-auto font-mono leading-relaxed">
                       {finding.evidence}
                     </pre>
                   </div>
                 )}
                 {finding.request && (
                   <div>
-                    <h4 className="text-sm font-semibold text-slate-700 mb-2">Request</h4>
-                    <pre className="text-sm bg-slate-900 text-slate-100 p-4 rounded-lg overflow-x-auto font-mono">
+                    <h4 className="text-sm font-semibold text-text-primary mb-3">Request</h4>
+                    <pre className="text-xs bg-bg-base border border-border-secondary text-text-secondary p-4 rounded-lg overflow-x-auto font-mono leading-relaxed">
                       {finding.request}
                     </pre>
                   </div>
                 )}
                 {finding.response && (
                   <div>
-                    <h4 className="text-sm font-semibold text-slate-700 mb-2">Response</h4>
-                    <pre className="text-sm bg-slate-900 text-slate-100 p-4 rounded-lg overflow-x-auto font-mono">
+                    <h4 className="text-sm font-semibold text-text-primary mb-3">Response</h4>
+                    <pre className="text-xs bg-bg-base border border-border-secondary text-text-secondary p-4 rounded-lg overflow-x-auto font-mono leading-relaxed">
                       {finding.response}
                     </pre>
                   </div>
                 )}
                 {!finding.evidence && !finding.request && !finding.response && (
-                  <div className="text-center py-8">
-                    <Info className="w-10 h-10 text-slate-300 mx-auto mb-2" />
-                    <p className="text-sm text-slate-500">No evidence data available</p>
+                  <div className="text-center py-12 border-2 border-dashed border-border-secondary rounded-xl">
+                    <Info className="w-10 h-10 text-text-muted mx-auto mb-3 opacity-50" />
+                    <p className="text-sm text-text-muted">No evidence data available</p>
                   </div>
                 )}
               </div>
             )}
 
             {activeTab === 'remediation' && (
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {finding.remediation && (
-                  <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
-                    <h4 className="text-sm font-semibold text-emerald-800 mb-2 flex items-center gap-2">
+                  <div className="bg-severity-low/10 border border-severity-low/20 rounded-xl p-5">
+                    <h4 className="text-sm font-semibold text-severity-low mb-2 flex items-center gap-2">
                       <CheckCircle className="w-4 h-4" />
                       Recommendation
                     </h4>
-                    <p className="text-sm text-emerald-700">{finding.remediation}</p>
+                    <p className="text-sm text-text-secondary">{finding.remediation}</p>
                   </div>
                 )}
                 {finding.codeExample && (
                   <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="text-sm font-semibold text-slate-700">Code Example</h4>
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-sm font-semibold text-text-primary">Code Example</h4>
                       <button
                         onClick={() => handleCopy(finding.codeExample || '')}
-                        className="text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1 px-2 py-1 hover:bg-slate-100 rounded"
+                        className="text-xs text-text-muted hover:text-text-primary flex items-center gap-1.5 px-2.5 py-1.5 hover:bg-bg-elevated rounded-md transition-colors border border-transparent hover:border-border-secondary"
                       >
                         <Copy className="w-3 h-3" />
                         {copied ? 'Copied!' : 'Copy'}
                       </button>
                     </div>
-                    <pre className="text-sm bg-slate-900 text-slate-100 p-4 rounded-lg overflow-x-auto font-mono">
+                    <pre className="text-xs bg-bg-base border border-border-secondary text-text-secondary p-4 rounded-lg overflow-x-auto font-mono leading-relaxed">
                       {finding.codeExample}
                     </pre>
+                  </div>
+                )}
+                {!finding.remediation && !finding.codeExample && (
+                  <div className="text-center py-12 border-2 border-dashed border-border-secondary rounded-xl">
+                    <Info className="w-10 h-10 text-text-muted mx-auto mb-3 opacity-50" />
+                    <p className="text-sm text-text-muted">No remediation guidance available</p>
                   </div>
                 )}
               </div>
@@ -376,38 +261,70 @@ const FindingCard: React.FC<{
   );
 };
 
-// Stat Card Component
-const StatCard: React.FC<{
-  label: string;
-  value: number;
-  severity?: 'critical' | 'high' | 'medium' | 'low' | 'info';
-}> = ({ label, value, severity }) => {
-  const colors = {
-    critical: 'bg-red-50 border-red-200 text-severity-critical',
-    high: 'bg-orange-50 border-orange-200 text-severity-high',
-    medium: 'bg-teal-50 border-teal-200 text-severity-medium',
-    low: 'bg-emerald-50 border-emerald-200 text-severity-low',
-    info: 'bg-slate-50 border-slate-200 text-slate-700'
-  };
-
-  return (
-    <div className={clsx(
-      'rounded-industrial border p-4 transition-transform hover:scale-[1.02] bg-white',
-      severity ? colors[severity] : 'bg-white border-slate-200'
-    )}>
-      <p className="text-sm font-medium opacity-80">{label}</p>
-      <p className="text-3xl font-bold mt-1">{value}</p>
+// Loading Skeleton
+const ScanResultsSkeleton: React.FC = () => (
+  <div className="p-8 space-y-6">
+    <div className="flex items-center gap-4">
+      <div className="h-12 w-12 bg-bg-elevated rounded-xl animate-pulse" />
+      <div>
+        <div className="h-6 w-48 bg-bg-elevated rounded animate-pulse mb-2" />
+        <div className="h-4 w-32 bg-bg-elevated rounded animate-pulse" />
+      </div>
     </div>
-  );
-};
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <div key={i} className="h-28 bg-bg-elevated rounded-xl animate-pulse" />
+      ))}
+    </div>
+    <div className="h-16 bg-bg-elevated rounded-xl animate-pulse" />
+    <div className="space-y-3">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="h-24 bg-bg-elevated rounded-xl animate-pulse" />
+      ))}
+    </div>
+  </div>
+);
 
 export const ScanResults: React.FC = () => {
   const { scanId } = useParams();
-  const [findings] = useState<Finding[]>(sampleFindings);
+  const [scan, setScan] = useState<Scan | null>(null);
+  const [findings, setFindings] = useState<Finding[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [filterSeverity, setFilterSeverity] = useState<string>('all');
   const [filterEngine, setFilterEngine] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Fetch real data from API
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!scanId) {
+        setError('No scan ID provided');
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        const [scanData, findingsData] = await Promise.all([
+          getScan(scanId),
+          getScanFindings(scanId)
+        ]);
+        setScan(scanData);
+        setFindings(findingsData);
+      } catch (err) {
+        console.error('Failed to load scan results:', err);
+        setError('Failed to load scan results. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [scanId]);
 
   // Filter findings
   const filteredFindings = findings.filter(f => {
@@ -433,24 +350,49 @@ export const ScanResults: React.FC = () => {
     low: findings.filter(f => f.severity === 'LOW').length
   };
 
+  if (loading) return <ScanResultsSkeleton />;
+
+  if (error) {
+    return (
+      <div className="p-8 space-y-6">
+        <div className="flex items-center gap-4">
+          <Link to="/scans" className="p-2 hover:bg-bg-elevated rounded-lg text-text-muted hover:text-text-primary transition-colors">
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
+          <h1 className="text-2xl font-bold text-text-primary">Scan Results</h1>
+        </div>
+        <Card className="py-12 text-center border-severity-critical/20 bg-severity-critical/5">
+          <AlertTriangle className="w-12 h-12 mx-auto text-severity-critical mb-4" />
+          <h3 className="text-lg font-bold text-severity-critical mb-2">Error Loading Results</h3>
+          <p className="text-text-secondary max-w-md mx-auto mb-6">{error}</p>
+          <Link to="/scans">
+            <Button variant="secondary">Back to Scans</Button>
+          </Link>
+        </Card>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="p-8 max-w-[1400px] space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-4">
-          <Link to="/" className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-700 transition-colors">
+          <Link to="/scans" className="p-2 hover:bg-bg-elevated rounded-xl text-text-muted hover:text-text-primary transition-colors">
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Scan Results</h1>
-            <p className="text-slate-500 text-sm mt-0.5">Scan ID: {scanId || 'demo'}</p>
+            <h1 className="text-2xl font-bold text-text-primary tracking-tight">Scan Results</h1>
+            <p className="text-text-muted text-sm mt-0.5 font-medium">
+              {scan?.scanType?.charAt(0).toUpperCase()}{scan?.scanType?.slice(1)} Scan • <span className="font-mono text-xs opacity-70">ID: {scanId?.slice(0, 8)}</span>
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="secondary" leftIcon={<Download className="w-4 h-4" />}>
+          <Button variant="ghost" icon={Download}>
             Export PDF
           </Button>
-          <Button variant="primary" leftIcon={<FileText className="w-4 h-4" />}>
+          <Button variant="primary" icon={FileText}>
             Generate Report
           </Button>
         </div>
@@ -458,31 +400,31 @@ export const ScanResults: React.FC = () => {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-        <StatCard label="Total Findings" value={stats.total} />
-        <StatCard label="Critical" value={stats.critical} severity="critical" />
-        <StatCard label="High" value={stats.high} severity="high" />
-        <StatCard label="Medium" value={stats.medium} severity="medium" />
-        <StatCard label="Low" value={stats.low} severity="low" />
+        <StatCard icon={Activity} label="Total Findings" value={stats.total} />
+        <StatCard icon={AlertTriangle} label="Critical" value={stats.critical} />
+        <StatCard icon={AlertTriangle} label="High" value={stats.high} />
+        <StatCard icon={AlertTriangle} label="Medium" value={stats.medium} />
+        <StatCard icon={Info} label="Low" value={stats.low} />
       </div>
 
       {/* Filters */}
-      <Card className="bg-white">
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+      <Card>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 p-1">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-muted" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search findings..."
-              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
+              placeholder="Search findings by title, description, or endpoint..."
+              className="w-full pl-10 pr-4 py-2.5 bg-bg-base border border-border-secondary rounded-xl focus:outline-none focus:ring-1 focus:ring-accent-primary text-sm transition-all focus:border-accent-primary text-text-primary placeholder:text-text-muted"
             />
           </div>
           <div className="flex items-center gap-3">
             <select
               value={filterSeverity}
               onChange={(e) => setFilterSeverity(e.target.value)}
-              className="px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
+              className="px-4 py-2.5 bg-bg-base border border-border-secondary rounded-xl focus:outline-none focus:ring-1 focus:ring-accent-primary text-sm transition-all text-text-primary focus:border-accent-primary"
             >
               <option value="all">All Severities</option>
               <option value="CRITICAL">Critical</option>
@@ -493,7 +435,7 @@ export const ScanResults: React.FC = () => {
             <select
               value={filterEngine}
               onChange={(e) => setFilterEngine(e.target.value)}
-              className="px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
+              className="px-4 py-2.5 bg-bg-base border border-border-secondary rounded-xl focus:outline-none focus:ring-1 focus:ring-accent-primary text-sm transition-all text-text-primary focus:border-accent-primary"
             >
               <option value="all">All Engines</option>
               <option value="zap">ZAP</option>
@@ -507,10 +449,16 @@ export const ScanResults: React.FC = () => {
       {/* Findings List */}
       <div className="space-y-3">
         {filteredFindings.length === 0 ? (
-          <Card className="py-12 text-center">
-            <CheckCircle className="w-12 h-12 mx-auto text-emerald-500 mb-4" />
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">No vulnerabilities found</h3>
-            <p className="text-slate-500">Great job! No issues match your current filters.</p>
+          <Card className="py-20 text-center border-dashed border-2 border-border-secondary bg-transparent">
+            <CheckCircle className="w-16 h-16 mx-auto text-severity-low mb-6 opacity-80" />
+            <h3 className="text-xl font-bold text-text-primary mb-2">
+              {findings.length === 0 ? 'No Vulnerabilities Found' : 'No Matching Results'}
+            </h3>
+            <p className="text-text-muted max-w-sm mx-auto">
+              {findings.length === 0
+                ? 'Great job! This scan didn\'t detect any security issues.'
+                : 'Try adjusting your filters to see more results.'}
+            </p>
           </Card>
         ) : (
           filteredFindings.map((finding, index) => (

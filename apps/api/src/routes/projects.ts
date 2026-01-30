@@ -271,6 +271,35 @@ router.post('/:projectId/scans', async (req, res) => {
   }
 });
 
+// Get all scans for a project (History)
+router.get('/:projectId/scans', async (req, res) => {
+  const { projectId } = req.params;
+  const user = (req as AuthRequest).user!;
+  
+  try {
+    const project = await prisma.project.findFirst({
+        where: { id: projectId, organizationId: user.organizationId || '' }
+    });
+
+    if (!project) return res.status(404).json({ error: 'Project not found' });
+
+    const scans = await prisma.scan.findMany({
+        where: { projectId },
+        orderBy: { createdAt: 'desc' },
+        include: {
+            _count: {
+                select: { findings: true }
+            }
+        }
+    });
+
+    res.json(scans);
+  } catch (error) {
+    console.error('Failed to fetch project scans:', error);
+    res.status(500).json({ error: 'Failed to fetch scans' });
+  }
+});
+
 router.get('/:projectId/scans/:scanId/report', async (req, res) => {
   try {
      const { projectId, scanId } = req.params;

@@ -1,65 +1,69 @@
 import React from 'react';
-import { clsx } from 'clsx';
-import { twMerge } from 'tailwind-merge';
 import { Loader2 } from 'lucide-react';
+import { clsx } from 'clsx';
+
+type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'success';
+type ButtonSize = 'sm' | 'md' | 'lg';
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-    variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'success';
-    size?: 'sm' | 'md' | 'lg';
-    isLoading?: boolean;
+    variant?: ButtonVariant;
+    size?: ButtonSize;
+    icon?: React.ElementType;
     leftIcon?: React.ReactNode;
     rightIcon?: React.ReactNode;
+    isLoading?: boolean;
     fullWidth?: boolean;
+    glow?: boolean;
 }
 
-export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
+export const Button: React.FC<ButtonProps> = ({
     children,
     variant = 'primary',
     size = 'md',
-    isLoading = false,
+    icon: Icon,
     leftIcon,
     rightIcon,
-    fullWidth = false,
-    className,
+    isLoading = false,
+    className = '',
     disabled,
+    fullWidth,
+    glow,
     ...props
-}, ref) => {
-    const baseStyles = 'inline-flex items-center justify-center font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed';
+}) => {
+    const baseStyles = 'inline-flex items-center justify-center gap-2 rounded-lg font-semibold cursor-pointer transition-all duration-200 font-sans disabled:opacity-50 disabled:cursor-not-allowed outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-bg-primary';
 
-    // Industrial Look: Industrial colors, sharp corners
     const variants = {
-        primary: 'bg-industrial-action hover:bg-industrial-action-hover text-white shadow-sm active:translate-y-[1px]',
-        secondary: 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 shadow-sm active:bg-gray-100',
-        ghost: 'text-gray-600 hover:bg-industrial-surface-hover/10 hover:text-industrial-surface',
-        danger: 'bg-severity-critical hover:bg-red-700 text-white shadow-sm',
-        success: 'bg-severity-success hover:bg-emerald-700 text-white shadow-sm',
+        primary: 'bg-accent-primary text-bg-primary border border-transparent hover:bg-accent-primary/90 focus:ring-accent-primary',
+        secondary: 'bg-bg-card text-text-primary border border-border-primary hover:bg-bg-elevated focus:ring-border-primary',
+        ghost: 'bg-transparent text-text-secondary border-none hover:text-text-primary hover:bg-bg-elevated focus:ring-text-secondary',
+        danger: 'bg-severity-critical text-white border border-transparent hover:bg-severity-critical/90 focus:ring-severity-critical',
+        success: 'bg-severity-success text-white border border-transparent hover:bg-severity-success/90 focus:ring-severity-success',
     };
 
     const sizes = {
-        sm: 'h-8 px-3 text-xs rounded-industrial',
-        md: 'h-10 px-4 text-sm rounded-industrial',
-        lg: 'h-12 px-6 text-base rounded-industrial',
+        sm: 'px-3 py-1.5 text-xs',
+        md: 'px-4 py-2 text-sm',
+        lg: 'px-6 py-3 text-base',
     };
 
     return (
         <button
-            ref={ref}
-            className={twMerge(
-                clsx(
-                    baseStyles,
-                    variants[variant],
-                    sizes[size],
-                    fullWidth && 'w-full',
-                    className
-                )
+            className={clsx(
+                baseStyles,
+                variants[variant],
+                sizes[size],
+                fullWidth && 'w-full',
+                glow && variant === 'primary' && 'shadow-lg shadow-accent-primary/25 hover:shadow-accent-primary/40',
+                className
             )}
             disabled={disabled || isLoading}
             {...props}
         >
-            {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            {!isLoading && leftIcon && <div className="mr-2">{leftIcon}</div>}
+            {isLoading && <Loader2 className="animate-spin" size={size === 'sm' ? 14 : 18} />}
+            {!isLoading && Icon && <Icon size={size === 'sm' ? 14 : 18} />}
+            {!isLoading && leftIcon}
             {children}
-            {!isLoading && rightIcon && <div className="ml-2">{rightIcon}</div>}
+            {!isLoading && rightIcon}
         </button>
     );
-});
+};

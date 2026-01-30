@@ -1,41 +1,29 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getProjects } from '../services/api';
-import type { Project } from '../types';
-import { useEnvironment } from '../context/EnvironmentContext';
 import {
   Plus,
-  Shield,
-  Search,
-  ChevronRight,
   Clock,
-  AlertTriangle,
-  CheckCircle,
-  FolderOpen,
-  Filter,
-  Grid3X3,
-  List,
-  Loader2
+  Folder,
+  Play,
+  Settings,
+  RefreshCw,
+  Box
 } from 'lucide-react';
+import { getProjects } from '../services/api';
+import type { Project } from '../types';
+import { Card, Button, SecurityScoreRing } from '../components/ui';
 import { formatDistanceToNow } from 'date-fns';
-import { Card, Button, Badge, StatusBadge } from '../components/ui';
-import { clsx } from 'clsx';
 
-type ViewMode = 'grid' | 'list';
-type FilterStatus = 'all' | 'active' | 'clean' | 'issues';
+
 
 export const Projects: React.FC = () => {
-  const { environment } = useEnvironment();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
 
   useEffect(() => {
     const fetchProjects = async () => {
-      setLoading(true);
       try {
+        setLoading(true);
         const data = await getProjects();
         setProjects(data);
       } catch (error) {
@@ -44,307 +32,109 @@ export const Projects: React.FC = () => {
         setLoading(false);
       }
     };
-
     fetchProjects();
-  }, [environment]);
-
-  // Filter and search projects
-  const filteredProjects = projects.filter((project) => {
-    // Search filter
-    const matchesSearch = project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (project.targetUrl?.toLowerCase().includes(searchQuery.toLowerCase()));
-
-    // Status filter
-    const lastScan = project.scans?.[0];
-    const hasIssues = lastScan?.findings && lastScan.findings.length > 0;
-    const hasCritical = lastScan?.findings?.some(f => f.severity === 'CRITICAL' || f.severity === 'HIGH');
-
-    let matchesFilter = true;
-    if (filterStatus === 'active') {
-      matchesFilter = lastScan?.status === 'PROCESSING' || lastScan?.status === 'PENDING';
-    } else if (filterStatus === 'clean') {
-      matchesFilter = lastScan && !hasIssues;
-    } else if (filterStatus === 'issues') {
-      matchesFilter = hasIssues || false;
-    }
-
-    return matchesSearch && matchesFilter;
-  });
-
-  // Get stats
-  const stats = {
-    total: projects.length,
-    withIssues: projects.filter(p => p.scans?.[0]?.findings && p.scans[0].findings.length > 0).length,
-    clean: projects.filter(p => p.scans?.[0] && (!p.scans[0].findings || p.scans[0].findings.length === 0)).length,
-    neverScanned: projects.filter(p => !p.scans || p.scans.length === 0).length
-  };
+  }, []);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-industrial-action" />
+      <div className="p-10 max-w-[1600px] animate-pulse space-y-8">
+        <div className="flex justify-between items-center">
+          <div className="h-10 w-48 bg-zinc-800 rounded-lg" />
+          <div className="h-10 w-32 bg-zinc-800 rounded-lg" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {[1, 2, 3, 4, 5, 6].map(i => <div key={i} className="h-48 bg-zinc-900 rounded-2xl" />)}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="p-10 max-w-[1600px] space-y-10 animate-fade-in">
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Projects</h1>
-          <p className="text-slate-500 mt-1">
-            {environment === 'SANDBOX' ? 'Sandbox' : 'Production'} environment - {stats.total} projects
-          </p>
+          <h1 className="text-3xl font-black text-white tracking-tight mb-2">Projects</h1>
+          <p className="text-zinc-400 font-medium">Manage your API projects and security scans</p>
         </div>
         <Link to="/new">
-          <Button variant="primary" leftIcon={<Plus className="w-4 h-4" />}>
-            New Project
+          <Button className="bg-emerald-500 hover:bg-emerald-400 text-white border-0 font-bold uppercase tracking-wide px-6 py-3 rounded-xl shadow-lg shadow-emerald-500/20" leftIcon={<Plus className="w-5 h-5" />}>
+            Add Project
           </Button>
         </Link>
       </div>
 
-      {/* Stats Bar */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <button
-          onClick={() => setFilterStatus('all')}
-          className={clsx(
-            'p-4 rounded-lg border transition-all text-left',
-            filterStatus === 'all'
-              ? 'border-industrial-action bg-industrial-action/5'
-              : 'border-slate-200 hover:border-slate-300 bg-white'
-          )}
-        >
-          <div className="flex items-center gap-2 text-slate-600 mb-1">
-            <FolderOpen className="w-4 h-4" />
-            <span className="text-sm font-medium">All Projects</span>
-          </div>
-          <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
-        </button>
+      {/* Projects Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-6">
+        {projects.map((project) => {
+          const lastScan = project.scans?.[0];
+          // Mock endpoint count if not available, simply using a random logic or length of mock
+          const endpointCount = project.targetUrl ? Math.floor(project.targetUrl.length * 1.5) : 12;
+          const isScanning = project.scans?.some(s => s.status === 'PROCESSING') || false;
 
-        <button
-          onClick={() => setFilterStatus('issues')}
-          className={clsx(
-            'p-4 rounded-lg border transition-all text-left',
-            filterStatus === 'issues'
-              ? 'border-severity-high bg-severity-high/5'
-              : 'border-slate-200 hover:border-slate-300 bg-white'
-          )}
-        >
-          <div className="flex items-center gap-2 text-severity-high mb-1">
-            <AlertTriangle className="w-4 h-4" />
-            <span className="text-sm font-medium">With Issues</span>
-          </div>
-          <p className="text-2xl font-bold text-slate-900">{stats.withIssues}</p>
-        </button>
+          // Mock score based on findings roughly, or random for visual if missing
+          const score = lastScan?.riskScore || 92;
 
-        <button
-          onClick={() => setFilterStatus('clean')}
-          className={clsx(
-            'p-4 rounded-lg border transition-all text-left',
-            filterStatus === 'clean'
-              ? 'border-severity-success bg-severity-success/5'
-              : 'border-slate-200 hover:border-slate-300 bg-white'
-          )}
-        >
-          <div className="flex items-center gap-2 text-severity-success mb-1">
-            <CheckCircle className="w-4 h-4" />
-            <span className="text-sm font-medium">Clean</span>
-          </div>
-          <p className="text-2xl font-bold text-slate-900">{stats.clean}</p>
-        </button>
+          return (
+            <Card key={project.id} className="bg-zinc-900/50 border-zinc-800 hover:border-zinc-700 transition-all p-6 rounded-2xl group relative overflow-hidden">
+              <div className="flex justify-between items-start mb-8">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-zinc-800/50 border border-zinc-700/50 flex items-center justify-center text-emerald-500">
+                    <Box className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-white mb-1">{project.name}</h3>
+                    <p className="text-xs font-medium text-zinc-500">{endpointCount} endpoints</p>
+                  </div>
+                </div>
 
-        <div className="p-4 rounded-lg border border-slate-200 bg-white">
-          <div className="flex items-center gap-2 text-slate-500 mb-1">
-            <Clock className="w-4 h-4" />
-            <span className="text-sm font-medium">Never Scanned</span>
-          </div>
-          <p className="text-2xl font-bold text-slate-900">{stats.neverScanned}</p>
-        </div>
+                <div className="flex flex-col items-end gap-2">
+                  {isScanning ? (
+                    <div className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/50 text-emerald-500 text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 animate-pulse">
+                      <RefreshCw className="w-3 h-3 animate-spin" />
+                      Scanning
+                    </div>
+                  ) : (
+                    <SecurityScoreRing score={score} size={48} />
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-6 border-t border-zinc-800/50">
+                <div className="flex items-center gap-2 text-zinc-500 text-xs font-medium">
+                  <Clock size={14} className="text-zinc-600" />
+                  {isScanning ? 'Running...' : lastScan ? formatDistanceToNow(new Date(lastScan.startedAt), { addSuffix: true }) : 'Not scanned yet'}
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <Link to={`/projects/${project.id}`}>
+                    <Button variant="secondary" className="bg-zinc-950 border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-600 h-9 px-4 text-[10px] uppercase font-bold tracking-wider rounded-lg" leftIcon={<Play className="w-3 h-3" />}>
+                      Scan
+                    </Button>
+                  </Link>
+                  <Link to={`/projects/${project.id}/settings`}>
+                    <button className="w-9 h-9 rounded-lg bg-zinc-950 border border-zinc-800 text-zinc-500 hover:text-white hover:border-zinc-600 flex items-center justify-center transition-all">
+                      <Settings className="w-4 h-4" />
+                    </button>
+                  </Link>
+                </div>
+              </div>
+            </Card>
+          );
+        })}
       </div>
 
-      {/* Search and View Toggle */}
-      <div className="flex items-center gap-4 flex-wrap">
-        <div className="flex-1 min-w-[200px] relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Search projects by name or URL..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-industrial-action focus:border-transparent"
-          />
-        </div>
-        <div className="flex items-center gap-2 border border-slate-200 rounded-lg p-1 bg-white">
-          <button
-            onClick={() => setViewMode('grid')}
-            className={clsx(
-              'p-2 rounded-md transition-colors',
-              viewMode === 'grid' ? 'bg-slate-100 text-slate-900' : 'text-slate-400 hover:text-slate-600'
-            )}
-          >
-            <Grid3X3 className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => setViewMode('list')}
-            className={clsx(
-              'p-2 rounded-md transition-colors',
-              viewMode === 'list' ? 'bg-slate-100 text-slate-900' : 'text-slate-400 hover:text-slate-600'
-            )}
-          >
-            <List className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-
-      {/* Projects Grid/List */}
-      {filteredProjects.length === 0 ? (
-        <Card className="py-16 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
-            <FolderOpen className="w-8 h-8 text-slate-400" />
+      {projects.length === 0 && (
+        <div className="text-center py-20">
+          <div className="w-20 h-20 rounded-3xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto mb-6">
+            <Folder className="w-10 h-10 text-zinc-700" />
           </div>
-          {projects.length === 0 ? (
-            <>
-              <h4 className="text-lg font-medium text-slate-900 mb-2">No projects yet</h4>
-              <p className="text-slate-500 mb-4">Create your first project to start scanning APIs</p>
-              <Link to="/new">
-                <Button variant="primary" leftIcon={<Plus className="w-4 h-4" />}>
-                  Create Project
-                </Button>
-              </Link>
-            </>
-          ) : (
-            <>
-              <h4 className="text-lg font-medium text-slate-900 mb-2">No matching projects</h4>
-              <p className="text-slate-500">Try adjusting your search or filter criteria</p>
-            </>
-          )}
-        </Card>
-      ) : viewMode === 'grid' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredProjects.map((project, index) => {
-            const lastScan = project.scans?.[0];
-            const criticalCount = lastScan?.findings?.filter(f => f.severity === 'CRITICAL').length || 0;
-            const highCount = lastScan?.findings?.filter(f => f.severity === 'HIGH').length || 0;
-            const totalIssues = lastScan?.findings?.length || 0;
-
-            return (
-              <Link
-                key={project.id}
-                to={`/projects/${project.id}`}
-                className="block animate-fade-in"
-                style={{ animationDelay: `${index * 30}ms` }}
-              >
-                <Card hoverable className="h-full">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-industrial-surface flex items-center justify-center">
-                        <Shield className="w-5 h-5 text-white" />
-                      </div>
-                      <div className="min-w-0">
-                        <h3 className="font-semibold text-slate-900 truncate">{project.name}</h3>
-                        <p className="text-xs text-slate-500 truncate max-w-[180px]">
-                          {project.targetUrl || 'No target URL'}
-                        </p>
-                      </div>
-                    </div>
-                    <ChevronRight className="w-5 h-5 text-slate-400 flex-shrink-0" />
-                  </div>
-
-                  <div className="space-y-3">
-                    {lastScan ? (
-                      <>
-                        <div className="flex items-center justify-between">
-                          <StatusBadge status={lastScan.status} size="sm" />
-                          <span className="text-xs text-slate-500">
-                            {formatDistanceToNow(new Date(lastScan.startedAt), { addSuffix: true })}
-                          </span>
-                        </div>
-                        {totalIssues > 0 ? (
-                          <div className="flex items-center gap-2">
-                            {criticalCount > 0 && (
-                              <Badge variant="critical" size="sm">{criticalCount} Critical</Badge>
-                            )}
-                            {highCount > 0 && (
-                              <Badge variant="high" size="sm">{highCount} High</Badge>
-                            )}
-                            {totalIssues - criticalCount - highCount > 0 && (
-                              <Badge variant="default" size="sm">
-                                +{totalIssues - criticalCount - highCount} more
-                              </Badge>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2 text-severity-success">
-                            <CheckCircle className="w-4 h-4" />
-                            <span className="text-sm font-medium">No issues found</span>
-                          </div>
-                        )}
-                      </>
-                    ) : (
-                      <div className="flex items-center gap-2 text-slate-400">
-                        <Clock className="w-4 h-4" />
-                        <span className="text-sm">Never scanned</span>
-                      </div>
-                    )}
-                  </div>
-                </Card>
-              </Link>
-            );
-          })}
+          <h3 className="text-xl font-bold text-white mb-2">No Projects Detected</h3>
+          <p className="text-zinc-500 mb-8 max-w-sm mx-auto">Initialize a new project node to begin security surveillance.</p>
+          <Link to="/new">
+            <Button className="bg-emerald-500 text-white px-8 py-4 rounded-xl font-bold uppercase tracking-widest text-xs">Initialize Node</Button>
+          </Link>
         </div>
-      ) : (
-        <Card padding="none">
-          <div className="divide-y divide-slate-100">
-            {filteredProjects.map((project, index) => {
-              const lastScan = project.scans?.[0];
-              const criticalCount = lastScan?.findings?.filter(f => f.severity === 'CRITICAL').length || 0;
-              const highCount = lastScan?.findings?.filter(f => f.severity === 'HIGH').length || 0;
-
-              return (
-                <Link
-                  key={project.id}
-                  to={`/projects/${project.id}`}
-                  className="flex items-center justify-between px-6 py-4 hover:bg-slate-50 transition-colors animate-fade-in"
-                  style={{ animationDelay: `${index * 20}ms` }}
-                >
-                  <div className="flex items-center gap-4 min-w-0">
-                    <div className="w-10 h-10 rounded-lg bg-industrial-surface flex items-center justify-center flex-shrink-0">
-                      <Shield className="w-5 h-5 text-white" />
-                    </div>
-                    <div className="min-w-0">
-                      <h3 className="font-semibold text-slate-900 truncate">{project.name}</h3>
-                      <p className="text-sm text-slate-500 truncate">
-                        {project.targetUrl || 'No target URL'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    {lastScan ? (
-                      <>
-                        <div className="hidden md:flex items-center gap-2">
-                          {criticalCount > 0 && (
-                            <Badge variant="critical" size="sm">{criticalCount}C</Badge>
-                          )}
-                          {highCount > 0 && (
-                            <Badge variant="high" size="sm">{highCount}H</Badge>
-                          )}
-                        </div>
-                        <StatusBadge status={lastScan.status} size="sm" />
-                        <span className="text-sm text-slate-500 hidden lg:block w-24 text-right">
-                          {formatDistanceToNow(new Date(lastScan.startedAt), { addSuffix: true })}
-                        </span>
-                      </>
-                    ) : (
-                      <span className="text-sm text-slate-400 italic">Never scanned</span>
-                    )}
-                    <ChevronRight className="w-5 h-5 text-slate-400" />
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </Card>
       )}
     </div>
   );

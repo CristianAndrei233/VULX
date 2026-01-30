@@ -1,0 +1,26 @@
+<svg width="200" height="220" viewBox="0 0 200 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="mdL" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#0ea5e9"/>
+    </linearGradient>
+    <linearGradient id="mdR" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#0ea5e9"/>
+    </linearGradient>
+    <filter id="glowMD" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <rect width="200" height="220" fill="#05070a"/>
+  <g transform="translate(100, 110)" filter="url(#glowMD)">
+    <path d="M-55 -80 L0 90 L-15 90 L-70 -80 Z" fill="url(#mdL)"/>
+    <path d="M55 -80 L0 90 L15 90 L70 -80 Z" fill="url(#mdR)"/>
+    <rect x="-70" y="-88" width="140" height="5" rx="2.5" fill="url(#mdL)" opacity="0.5"/>
+    <path d="M0 -10 L18 15 L0 40 L-18 15 Z" fill="#05070a" stroke="url(#mdL)" stroke-width="2.5"/>
+  </g>
+</svg>

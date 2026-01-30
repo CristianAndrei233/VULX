@@ -1,0 +1,20 @@
+<svg width="200" height="60" viewBox="0 0 200 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="hcdL" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#0ea5e9"/>
+    </linearGradient>
+    <linearGradient id="hcdR" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#0ea5e9"/>
+    </linearGradient>
+  </defs>
+  <rect width="200" height="60" fill="#05070a"/>
+  <g transform="translate(30, 30)">
+    <path d="M-14 -20 L0 22 L-4 22 L-18 -20 Z" fill="url(#hcdL)"/>
+    <path d="M14 -20 L0 22 L4 22 L18 -20 Z" fill="url(#hcdR)"/>
+    <rect x="-18" y="-22" width="36" height="2" rx="1" fill="url(#hcdL)" opacity="0.5"/>
+    <path d="M0 -2 L5 4 L0 10 L-5 4 Z" fill="#05070a" stroke="url(#hcdL)" stroke-width="1.2"/>
+  </g>
+  <text x="65" y="38" font-family="'Outfit', 'SF Pro Display', -apple-system, sans-serif" font-size="26" font-weight="700" letter-spacing="-1" fill="#f1f5f9">VULX</text>
+</svg>

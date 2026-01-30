@@ -89,6 +89,9 @@ app.use('/api/remediation', authenticateToken, remediationRoutes);
 app.use('/api/trends', authenticateToken, trendsRoutes);
 app.use('/api/rules', authenticateToken, rulesRoutes);
 
+import scansRoutes from './routes/scans';
+app.use('/api/scans', authenticateToken, scansRoutes);
+
 // Import and register tickets routes
 import ticketsRoutes from './routes/tickets';
 app.use('/api/tickets', authenticateToken, ticketsRoutes);

@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { ArrowLeft, ArrowRight, Building } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Building, Globe } from 'lucide-react';
 import { useOnboarding } from '../../context/OnboardingContext';
+import { Button } from '../../components/ui';
 
 export function Organization() {
   const { nextStep, prevStep, organizationName, setOrganizationName } = useOnboarding();
@@ -11,7 +12,7 @@ export function Organization() {
     e.preventDefault();
 
     if (!name.trim()) {
-      setError('Organization name is required');
+      setError('Protocol identifier required');
       return;
     }
 
@@ -20,66 +21,67 @@ export function Organization() {
   };
 
   return (
-    <div className="min-h-screen bg-industrial-base flex items-center justify-center p-4">
-      <div className="max-w-md w-full">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-industrial-action/10 rounded-full mb-4">
-            <Building className="w-8 h-8 text-industrial-action" />
+    <div className="min-h-screen bg-zinc-50 flex items-center justify-center p-8 font-sans overflow-hidden relative">
+      <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-indigo-50 rounded-full blur-[140px] opacity-40" />
+
+      <div className="max-w-md w-full relative z-10">
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-zinc-900 rounded-[28px] mb-6 shadow-xl border border-zinc-800">
+            <Building className="w-10 h-10 text-primary-500" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Create your organization
-          </h1>
-          <p className="text-gray-500">
-            Organizations help you manage projects and collaborate with your team
-          </p>
+          <h1 className="text-4xl font-black text-zinc-900 mb-2 tracking-tight uppercase">Base Operations</h1>
+          <p className="text-zinc-500 font-bold uppercase tracking-widest text-[10px]">Establish Global Entity Matrix</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label htmlFor="orgName" className="block text-sm font-medium text-gray-700 mb-2">
-              Organization Name
+        <form onSubmit={handleSubmit} className="space-y-8 p-10 bg-white/60 backdrop-blur-md rounded-[44px] border border-zinc-200 shadow-2xl">
+          <div className="space-y-2">
+            <label htmlFor="orgName" className="block text-[11px] font-black text-zinc-400 uppercase tracking-widest ml-1">
+              Organization Descriptor
             </label>
-            <input
-              type="text"
-              id="orgName"
-              value={name}
-              onChange={(e) => {
-                setName(e.target.value);
-                setError('');
-              }}
-              className={`w-full px-4 py-3 bg-white border rounded-industrial text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-industrial-action ${error ? 'border-severity-critical' : 'border-gray-300'
-                }`}
-              placeholder="Acme Inc."
-            />
+            <div className="relative group">
+              <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-300 group-focus-within:text-primary-500 transition-colors" />
+              <input
+                type="text"
+                id="orgName"
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  setError('');
+                }}
+                className={`w-full pl-11 pr-6 py-4 bg-white border rounded-2xl text-zinc-900 font-bold placeholder-zinc-300 focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500/50 transition-all ${error ? 'border-red-500' : 'border-zinc-200 shadow-sm'}`}
+                placeholder="Nexus Corp"
+              />
+            </div>
             {error && (
-              <p className="mt-1 text-sm text-severity-critical">{error}</p>
+              <p className="mt-1 text-[10px] font-black text-red-600 uppercase tracking-tight ml-1">{error}</p>
             )}
-            <p className="mt-2 text-sm text-gray-500">
-              This can be your company name, team name, or personal workspace
+            <p className="mt-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest leading-relaxed text-center italic opacity-60">
+              Unique identifier for your secure workspace
             </p>
           </div>
 
           <div className="flex gap-4 pt-4">
-            <button
+            <Button
               type="button"
+              variant="secondary"
               onClick={prevStep}
-              className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 bg-white border border-gray-300 text-gray-700 font-medium rounded-industrial hover:bg-gray-50 transition-colors"
+              className="flex-1 py-5 rounded-2xl font-black uppercase tracking-widest text-[10px]"
+              leftIcon={<ArrowLeft className="w-4 h-4" />}
             >
-              <ArrowLeft className="w-4 h-4" />
               Back
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
-              className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 bg-industrial-action text-white font-medium rounded-industrial hover:bg-industrial-action-hover transition-colors"
+              className="flex-1 py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary-500/20"
+              rightIcon={<ArrowRight className="w-4 h-4" />}
             >
-              Continue
-              <ArrowRight className="w-4 h-4" />
-            </button>
+              Sync
+            </Button>
           </div>
         </form>
 
-        <div className="mt-8">
-          <StepIndicator current={3} total={5} />
+        <div className="mt-12">
+          <StepIndicator current={3} total={6} />
         </div>
       </div>
     </div>
@@ -88,11 +90,11 @@ export function Organization() {
 
 function StepIndicator({ current, total }: { current: number; total: number }) {
   return (
-    <div className="flex justify-center gap-2">
+    <div className="flex justify-center gap-4">
       {Array.from({ length: total }, (_, i) => (
         <div
           key={i}
-          className={`w-2 h-2 rounded-full transition-colors ${i + 1 <= current ? 'bg-industrial-action' : 'bg-gray-300'
+          className={`h-1 rounded-full transition-all duration-700 ${i + 1 <= current ? 'bg-primary-500 w-8 shadow-[0_0_8px_rgba(99,102,241,0.5)]' : 'bg-zinc-200 w-4 opacity-40'
             }`}
         />
       ))}

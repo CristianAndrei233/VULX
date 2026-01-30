@@ -118,7 +118,7 @@ export const ScanTypeModal: React.FC<ScanTypeModalProps> = ({
               const Icon = scanType.icon;
               const isSelected = selectedType === scanType.id;
 
-              const colorClasses = {
+              const colorMap = {
                 emerald: {
                   border: isSelected ? 'border-emerald-500 ring-2 ring-emerald-200' : 'border-slate-200 hover:border-emerald-300',
                   icon: 'bg-emerald-100 text-emerald-600',
@@ -134,7 +134,9 @@ export const ScanTypeModal: React.FC<ScanTypeModalProps> = ({
                   icon: 'bg-amber-100 text-amber-600',
                   badge: 'bg-amber-100 text-amber-700'
                 }
-              }[scanType.color];
+              };
+
+              const colorClasses = colorMap[scanType.color as keyof typeof colorMap] || colorMap.indigo;
 
               return (
                 <button

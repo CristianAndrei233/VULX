@@ -11,10 +11,10 @@ import { ProjectSettings } from './pages/ProjectSettings';
 import { Billing } from './pages/Billing';
 import { Profile } from './pages/Profile';
 import { AdminDashboard } from './pages/AdminDashboard';
-import { Login } from './pages/Login';
-import { Register } from './pages/Register';
+import Auth from './pages/Auth';
 import { ScanConfig } from './pages/ScanConfig';
 import { ScanResults } from './pages/ScanResults';
+import { ScansList } from './pages/ScansList';
 import { Notifications } from './pages/Notifications';
 
 import { Integrations } from './pages/Integrations';
@@ -29,8 +29,8 @@ function App() {
         <BrowserRouter>
           <Routes>
             {/* Public Routes */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+            <Route path="/login" element={<Auth initialView="login" />} />
+            <Route path="/register" element={<Auth initialView="register" />} />
 
             {/* Protected Routes */}
             <Route path="/" element={
@@ -59,7 +59,7 @@ function App() {
               <Route path="scan/quick" element={<ScanConfig />} />
               <Route path="scan/:projectId/config" element={<ScanConfig />} />
               <Route path="scans/:scanId" element={<ScanResults />} />
-              <Route path="scans" element={<ScanResults />} />
+              <Route path="scans" element={<ScansList />} />
 
               <Route path="reports" element={<ScanResults />} />
             </Route>

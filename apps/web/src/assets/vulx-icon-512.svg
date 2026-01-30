@@ -1,0 +1,31 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="i512L" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#0ea5e9"/>
+    </linearGradient>
+    <linearGradient id="i512R" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#0ea5e9"/>
+    </linearGradient>
+    <radialGradient id="bg512" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#0c1015"/>
+      <stop offset="100%" stop-color="#05070a"/>
+    </radialGradient>
+    <filter id="glow512" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="108" fill="url(#bg512)"/>
+  <rect width="512" height="512" rx="108" fill="none" stroke="url(#i512L)" stroke-opacity="0.15" stroke-width="1"/>
+  <g transform="translate(256, 256)" filter="url(#glow512)">
+    <path d="M-75 -110 L0 125 L-22 125 L-97 -110 Z" fill="url(#i512L)"/>
+    <path d="M75 -110 L0 125 L22 125 L97 -110 Z" fill="url(#i512R)"/>
+    <rect x="-97" y="-120" width="194" height="7" rx="3.5" fill="url(#i512L)" opacity="0.5"/>
+    <path d="M0 -12 L25 22 L0 56 L-25 22 Z" fill="#05070a" stroke="url(#i512L)" stroke-width="3.5"/>
+  </g>
+</svg>

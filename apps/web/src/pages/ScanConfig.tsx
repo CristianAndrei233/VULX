@@ -20,6 +20,8 @@ import {
   Info
 } from 'lucide-react';
 import api from '../services/api';
+import { Card, Button, Input } from '../components/ui';
+import { clsx } from 'clsx';
 
 type AuthMethod = 'none' | 'bearer_token' | 'basic_auth' | 'oauth2_client_credentials' | 'session_cookie' | 'api_key';
 type ScanType = 'quick' | 'standard' | 'full';
@@ -201,47 +203,51 @@ export const ScanConfig: React.FC = () => {
     <div className="max-w-4xl mx-auto space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Configure Scan</h1>
-        <p className="mt-1 text-gray-500">Set up your security scan parameters</p>
+        <h1 className="text-2xl font-bold text-zinc-900 tracking-tight">Configure Scan</h1>
+        <p className="mt-1 text-zinc-500">Set up your security scan parameters for a new assessment.</p>
       </div>
 
       {/* Error Alert */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center space-x-3">
+        <div className="bg-red-50 border border-red-200 rounded-md p-4 flex items-center space-x-3 text-sm">
           <AlertCircle className="w-5 h-5 text-red-600" />
-          <p className="text-red-700">{error}</p>
+          <p className="text-red-700 font-medium">{error}</p>
         </div>
       )}
 
       {/* Project Selection (Visible only if no projectId in URL) */}
       {!projectId && (
-        <div className="bg-white rounded-industrial shadow-sm border border-gray-100 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-            <Target className="w-5 h-5 mr-2 text-industrial-action" />
+        <Card>
+          <h2 className="text-lg font-semibold text-zinc-900 mb-6 flex items-center">
+            <div className="p-2 bg-indigo-50 rounded-lg mr-3">
+              <Target className="w-5 h-5 text-primary-600" />
+            </div>
             Select Project
           </h2>
 
           {loadingProjects ? (
-            <div className="text-gray-500">Loading projects...</div>
+            <div className="text-zinc-500 py-4 flex items-center gap-2">
+              <div className="w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+              Loading projects...
+            </div>
           ) : projects.length === 0 ? (
-            <div className="text-center py-4">
-              <p className="text-gray-500 mb-4">You need a project to start a scan.</p>
-              <Link
-                to="/new"
-                className="inline-flex items-center px-4 py-2 bg-industrial-action text-white rounded-industrial hover:bg-industrial-action-hover"
-              >
-                Create New Project
+            <div className="text-center py-8 bg-zinc-50 rounded-lg border border-zinc-100 border-dashed">
+              <p className="text-zinc-500 mb-4">You need a project to start a scan.</p>
+              <Link to="/new">
+                <Button variant="primary" leftIcon={<Target className="w-4 h-4" />}>
+                  Create New Project
+                </Button>
               </Link>
             </div>
           ) : (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-zinc-700 mb-1.5">
                 Project <span className="text-red-500">*</span>
               </label>
               <select
                 value={selectedProjectId}
-                onChange={(e) => handleProjectChange(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-industrial focus:ring-2 focus:ring-industrial-action focus:border-industrial-action"
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handleProjectChange(e.target.value)}
+                className="w-full px-4 py-2.5 bg-white border border-zinc-200 rounded-md focus:ring-2 focus:ring-primary-100 focus:border-primary-500 outline-none transition-all text-zinc-900"
               >
                 {projects.map(p => (
                   <option key={p.id} value={p.id}>
@@ -249,60 +255,59 @@ export const ScanConfig: React.FC = () => {
                   </option>
                 ))}
               </select>
-              <p className="mt-1 text-xs text-gray-500">Select which project this scan belongs to.</p>
+              <p className="mt-1.5 text-xs text-zinc-500">Select which project this scan belongs to.</p>
             </div>
           )}
-        </div>
+        </Card>
       )}
 
       {/* Target Configuration */}
-      <div className="bg-white rounded-industrial shadow-sm border border-gray-100 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-          <Globe className="w-5 h-5 mr-2 text-industrial-action" />
+      <Card>
+        <h2 className="text-lg font-semibold text-zinc-900 mb-6 flex items-center">
+          <div className="p-2 bg-emerald-50 rounded-lg mr-3">
+            <Globe className="w-5 h-5 text-emerald-600" />
+          </div>
           Target Configuration
         </h2>
 
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Target URL <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="url"
-              value={config.targetUrl}
-              onChange={(e) => updateConfig('targetUrl', e.target.value)}
-              placeholder="https://api.example.com"
-              className="w-full px-4 py-2 border border-gray-300 rounded-industrial focus:ring-2 focus:ring-industrial-action focus:border-industrial-action"
-            />
-            <p className="mt-1 text-xs text-gray-500">The base URL of the API you want to scan</p>
-          </div>
+        <div className="space-y-6">
+          <Input
+            label="Target URL"
+            required
+            type="url"
+            value={config.targetUrl}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateConfig('targetUrl', e.target.value)}
+            placeholder="https://api.example.com"
+            hint="The base URL of the API you want to scan"
+          />
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-zinc-700 mb-1.5">
               OpenAPI Specification URL
             </label>
-            <div className="flex space-x-2">
+            <div className="flex gap-2">
               <input
                 type="url"
                 value={config.specUrl}
-                onChange={(e) => updateConfig('specUrl', e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateConfig('specUrl', e.target.value)}
                 placeholder="https://api.example.com/openapi.json"
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-industrial focus:ring-2 focus:ring-industrial-action focus:border-industrial-action"
+                className="flex-1 px-4 py-2.5 bg-white border border-zinc-200 rounded-md focus:ring-2 focus:ring-primary-100 focus:border-primary-500 outline-none transition-all text-zinc-900"
               />
-              <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center">
-                <FileJson className="w-4 h-4 mr-2" />
+              <Button variant="secondary" leftIcon={<FileJson className="w-4 h-4" />}>
                 Upload
-              </button>
+              </Button>
             </div>
-            <p className="mt-1 text-xs text-gray-500">Optional: Provide an OpenAPI/Swagger spec for more accurate scanning</p>
+            <p className="mt-1.5 text-xs text-zinc-500">Optional: Provide an OpenAPI/Swagger spec for more accurate scanning</p>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Scan Type Selection */}
-      <div className="bg-white rounded-industrial shadow-sm border border-gray-100 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-          <Zap className="w-5 h-5 mr-2 text-industrial-action" />
+      <Card>
+        <h2 className="text-lg font-semibold text-zinc-900 mb-6 flex items-center">
+          <div className="p-2 bg-amber-50 rounded-lg mr-3">
+            <Zap className="w-5 h-5 text-amber-600" />
+          </div>
           Scan Type
         </h2>
 
@@ -311,43 +316,49 @@ export const ScanConfig: React.FC = () => {
             <button
               key={scanType.type}
               onClick={() => handleScanTypeChange(scanType.type)}
-              className={`p-4 rounded-industrial border-2 text-left transition-all ${config.scanType === scanType.type
-                ? 'border-industrial-action bg-industrial-surface/5'
-                : 'border-gray-200 hover:border-gray-300'
-                }`}
+              className={clsx(
+                "p-4 rounded-xl border-2 text-left transition-all relative overflow-hidden",
+                config.scanType === scanType.type
+                  ? "border-primary-600 bg-primary-50/30 ring-1 ring-primary-600/20"
+                  : "border-zinc-200 hover:border-zinc-300 hover:bg-zinc-50/50 bg-white"
+              )}
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="font-semibold text-gray-900">{scanType.name}</span>
+                <span className={clsx("font-semibold", config.scanType === scanType.type ? "text-primary-900" : "text-zinc-900")}>
+                  {scanType.name}
+                </span>
                 {config.scanType === scanType.type && (
-                  <CheckCircle className="w-5 h-5 text-industrial-action" />
+                  <CheckCircle className="w-5 h-5 text-primary-600" />
                 )}
               </div>
-              <p className="text-sm text-gray-500 mb-3">{scanType.description}</p>
-              <div className="flex items-center justify-between text-xs">
-                <span className="flex items-center text-gray-400">
-                  <Clock className="w-3 h-3 mr-1" />
+              <p className="text-sm text-zinc-500 mb-4 leading-relaxed">{scanType.description}</p>
+              <div className="flex items-center justify-between text-xs pt-3 border-t border-zinc-100/50">
+                <span className="flex items-center text-zinc-400 font-medium">
+                  <Clock className="w-3.5 h-3.5 mr-1.5" />
                   {scanType.duration}
                 </span>
-                <div className="flex space-x-1">
-                  {scanType.engines.map((engine) => (
-                    <span
-                      key={engine}
-                      className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded"
-                    >
-                      {engine}
-                    </span>
-                  ))}
-                </div>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {scanType.engines.map((engine) => (
+                  <span
+                    key={engine}
+                    className="px-2 py-0.5 bg-white border border-zinc-100 text-zinc-500 rounded text-[10px] font-medium shadow-sm"
+                  >
+                    {engine}
+                  </span>
+                ))}
               </div>
             </button>
           ))}
         </div>
-      </div>
+      </Card>
 
       {/* Authentication Configuration */}
-      <div className="bg-white rounded-industrial shadow-sm border border-gray-100 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-          <Lock className="w-5 h-5 mr-2 text-industrial-action" />
+      <Card>
+        <h2 className="text-lg font-semibold text-zinc-900 mb-6 flex items-center">
+          <div className="p-2 bg-purple-50 rounded-lg mr-3">
+            <Lock className="w-5 h-5 text-purple-600" />
+          </div>
           Authentication
         </h2>
 
@@ -357,12 +368,16 @@ export const ScanConfig: React.FC = () => {
             <button
               key={auth.method}
               onClick={() => updateConfig('authMethod', auth.method)}
-              className={`p-3 rounded-industrial border text-left transition-all flex items-center space-x-2 ${config.authMethod === auth.method
-                ? 'border-industrial-action bg-industrial-surface/5 text-industrial-action'
-                : 'border-gray-200 hover:border-gray-300 text-gray-700'
-                }`}
+              className={clsx(
+                "p-3 rounded-lg border text-left transition-all flex items-center space-x-2.5",
+                config.authMethod === auth.method
+                  ? "border-primary-600 bg-primary-50 text-primary-700 ring-1 ring-primary-600/10"
+                  : "border-zinc-200 hover:border-zinc-300 text-zinc-700 bg-white hover:bg-zinc-50"
+              )}
             >
-              {auth.icon}
+              <span className={config.authMethod === auth.method ? "text-primary-600" : "text-zinc-400"}>
+                {auth.icon}
+              </span>
               <span className="text-sm font-medium">{auth.name}</span>
             </button>
           ))}
@@ -370,257 +385,212 @@ export const ScanConfig: React.FC = () => {
 
         {/* Auth Configuration Fields */}
         {config.authMethod !== 'none' && (
-          <div className="space-y-4 pt-4 border-t border-gray-100">
+          <div className="space-y-4 pt-6 border-t border-zinc-100 animate-fade-in">
             {config.authMethod === 'bearer_token' && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Bearer Token
-                </label>
-                <input
-                  type="password"
-                  value={config.authConfig.bearerToken || ''}
-                  onChange={(e) => updateAuthConfig('bearerToken', e.target.value)}
-                  placeholder="eyJhbGciOiJIUzI1NiIs..."
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono text-sm"
-                />
-              </div>
+              <Input
+                label="Bearer Token"
+                type="password"
+                value={config.authConfig.bearerToken || ''}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateAuthConfig('bearerToken', e.target.value)}
+                placeholder="eyJhbGciOiJIUzI1NiIs..."
+                className="font-mono text-sm"
+              />
             )}
 
             {config.authMethod === 'api_key' && (
               <>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Header Name
-                  </label>
-                  <input
-                    type="text"
-                    value={config.authConfig.apiKeyHeader || 'X-API-Key'}
-                    onChange={(e) => updateAuthConfig('apiKeyHeader', e.target.value)}
-                    placeholder="X-API-Key"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    API Key Value
-                  </label>
-                  <input
-                    type="password"
-                    value={config.authConfig.apiKeyValue || ''}
-                    onChange={(e) => updateAuthConfig('apiKeyValue', e.target.value)}
-                    placeholder="your-api-key"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono text-sm"
-                  />
-                </div>
+                <Input
+                  label="Header Name"
+                  value={config.authConfig.apiKeyHeader || 'X-API-Key'}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateAuthConfig('apiKeyHeader', e.target.value)}
+                  placeholder="X-API-Key"
+                />
+                <Input
+                  label="API Key Value"
+                  type="password"
+                  value={config.authConfig.apiKeyValue || ''}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateAuthConfig('apiKeyValue', e.target.value)}
+                  placeholder="your-api-key"
+                  className="font-mono text-sm"
+                />
               </>
             )}
 
             {config.authMethod === 'basic_auth' && (
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Username
-                  </label>
-                  <input
-                    type="text"
-                    value={config.authConfig.username || ''}
-                    onChange={(e) => updateAuthConfig('username', e.target.value)}
-                    placeholder="username"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Password
-                  </label>
-                  <input
-                    type="password"
-                    value={config.authConfig.password || ''}
-                    onChange={(e) => updateAuthConfig('password', e.target.value)}
-                    placeholder="password"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  />
-                </div>
+                <Input
+                  label="Username"
+                  value={config.authConfig.username || ''}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateAuthConfig('username', e.target.value)}
+                  placeholder="username"
+                />
+                <Input
+                  label="Password"
+                  type="password"
+                  value={config.authConfig.password || ''}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateAuthConfig('password', e.target.value)}
+                  placeholder="password"
+                />
               </div>
             )}
 
             {config.authMethod === 'oauth2_client_credentials' && (
               <>
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Client ID
-                    </label>
-                    <input
-                      type="text"
-                      value={config.authConfig.oauth2ClientId || ''}
-                      onChange={(e) => updateAuthConfig('oauth2ClientId', e.target.value)}
-                      placeholder="client-id"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Client Secret
-                    </label>
-                    <input
-                      type="password"
-                      value={config.authConfig.oauth2ClientSecret || ''}
-                      onChange={(e) => updateAuthConfig('oauth2ClientSecret', e.target.value)}
-                      placeholder="client-secret"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Token URL
-                  </label>
-                  <input
-                    type="url"
-                    value={config.authConfig.oauth2TokenUrl || ''}
-                    onChange={(e) => updateAuthConfig('oauth2TokenUrl', e.target.value)}
-                    placeholder="https://auth.example.com/oauth/token"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  <Input
+                    label="Client ID"
+                    value={config.authConfig.oauth2ClientId || ''}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateAuthConfig('oauth2ClientId', e.target.value)}
+                    placeholder="client-id"
+                  />
+                  <Input
+                    label="Client Secret"
+                    type="password"
+                    value={config.authConfig.oauth2ClientSecret || ''}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateAuthConfig('oauth2ClientSecret', e.target.value)}
+                    placeholder="client-secret"
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Scope (optional)
-                  </label>
-                  <input
-                    type="text"
-                    value={config.authConfig.oauth2Scope || ''}
-                    onChange={(e) => updateAuthConfig('oauth2Scope', e.target.value)}
-                    placeholder="read write"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  />
-                </div>
+                <Input
+                  label="Token URL"
+                  type="url"
+                  value={config.authConfig.oauth2TokenUrl || ''}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateAuthConfig('oauth2TokenUrl', e.target.value)}
+                  placeholder="https://auth.example.com/oauth/token"
+                />
+                <Input
+                  label="Scope (optional)"
+                  value={config.authConfig.oauth2Scope || ''}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateAuthConfig('oauth2Scope', e.target.value)}
+                  placeholder="read write"
+                />
               </>
             )}
 
             {config.authMethod === 'session_cookie' && (
               <>
+                <Input
+                  label="Login URL"
+                  type="url"
+                  value={config.authConfig.loginUrl || ''}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateAuthConfig('loginUrl', e.target.value)}
+                  placeholder="https://api.example.com/auth/login"
+                />
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Login URL
-                  </label>
-                  <input
-                    type="url"
-                    value={config.authConfig.loginUrl || ''}
-                    onChange={(e) => updateAuthConfig('loginUrl', e.target.value)}
-                    placeholder="https://api.example.com/auth/login"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-zinc-700 mb-1.5">
                     Login Body (JSON)
                   </label>
                   <textarea
                     value={config.authConfig.loginBody || ''}
-                    onChange={(e) => updateAuthConfig('loginBody', e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => updateAuthConfig('loginBody', e.target.value)}
                     placeholder='{"username": "test@example.com", "password": "password123"}'
                     rows={3}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono text-sm"
+                    className="w-full px-4 py-2.5 bg-white border border-zinc-200 rounded-md focus:ring-2 focus:ring-primary-100 focus:border-primary-500 outline-none transition-all text-zinc-900 font-mono text-sm"
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Session Cookie Name
-                  </label>
-                  <input
-                    type="text"
-                    value={config.authConfig.sessionCookieName || ''}
-                    onChange={(e) => updateAuthConfig('sessionCookieName', e.target.value)}
-                    placeholder="session_id"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  />
-                </div>
+                <Input
+                  label="Session Cookie Name"
+                  value={config.authConfig.sessionCookieName || ''}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateAuthConfig('sessionCookieName', e.target.value)}
+                  placeholder="session_id"
+                />
               </>
             )}
           </div>
         )}
-      </div>
+      </Card>
 
       {/* Advanced Settings */}
-      <div className="bg-white rounded-industrial shadow-sm border border-gray-100 overflow-hidden">
+      <Card className="overflow-hidden p-0">
         <button
           onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
-          className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50"
+          className="w-full px-6 py-5 flex items-center justify-between hover:bg-zinc-50 transition-colors"
         >
-          <h2 className="text-lg font-semibold text-gray-900 flex items-center">
-            <Settings className="w-5 h-5 mr-2 text-industrial-action" />
+          <h2 className="text-lg font-semibold text-zinc-900 flex items-center">
+            <div className="p-2 bg-zinc-100 rounded-lg mr-3">
+              <Settings className="w-5 h-5 text-zinc-600" />
+            </div>
             Advanced Settings
           </h2>
           {isAdvancedOpen ? (
-            <ChevronUp className="w-5 h-5 text-gray-400" />
+            <ChevronUp className="w-5 h-5 text-zinc-400" />
           ) : (
-            <ChevronDown className="w-5 h-5 text-gray-400" />
+            <ChevronDown className="w-5 h-5 text-zinc-400" />
           )}
         </button>
 
         {isAdvancedOpen && (
-          <div className="px-6 pb-6 pt-2 space-y-4 border-t border-gray-100">
+          <div className="px-6 pb-8 pt-2 space-y-6 border-t border-zinc-100">
             {/* Engine Selection */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-zinc-700 mb-3">
                 Scan Engines
               </label>
-              <div className="space-y-2">
-                <label className="flex items-center space-x-3">
+              <div className="space-y-3">
+                <label className="flex items-center space-x-3 p-3 border border-zinc-100 rounded-lg hover:bg-zinc-50 cursor-pointer transition-colors">
                   <input
                     type="checkbox"
                     checked={config.engines.nuclei}
-                    onChange={(e) => updateConfig('engines', { ...config.engines, nuclei: e.target.checked })}
-                    className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateConfig('engines', { ...config.engines, nuclei: e.target.checked })}
+                    className="w-4 h-4 text-primary-600 border-zinc-300 rounded focus:ring-primary-500"
                   />
-                  <span className="text-sm text-gray-700">Nuclei - CVE & misconfiguration detection</span>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium text-zinc-900">Nuclei</span>
+                    <span className="text-xs text-zinc-500">Fast CVE & misconfiguration detection</span>
+                  </div>
                 </label>
-                <label className="flex items-center space-x-3">
+                <label className="flex items-center space-x-3 p-3 border border-zinc-100 rounded-lg hover:bg-zinc-50 cursor-pointer transition-colors">
                   <input
                     type="checkbox"
                     checked={config.engines.zap}
-                    onChange={(e) => updateConfig('engines', { ...config.engines, zap: e.target.checked })}
-                    className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateConfig('engines', { ...config.engines, zap: e.target.checked })}
+                    className="w-4 h-4 text-primary-600 border-zinc-300 rounded focus:ring-primary-500"
                   />
-                  <span className="text-sm text-gray-700">OWASP ZAP - Dynamic application security testing</span>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium text-zinc-900">OWASP ZAP</span>
+                    <span className="text-xs text-zinc-500">Dynamic application security testing (DAST)</span>
+                  </div>
                 </label>
-                <label className="flex items-center space-x-3">
+                <label className="flex items-center space-x-3 p-3 border border-zinc-100 rounded-lg hover:bg-zinc-50 cursor-pointer transition-colors">
                   <input
                     type="checkbox"
                     checked={config.engines.schemathesis}
-                    onChange={(e) => updateConfig('engines', { ...config.engines, schemathesis: e.target.checked })}
-                    className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateConfig('engines', { ...config.engines, schemathesis: e.target.checked })}
+                    className="w-4 h-4 text-primary-600 border-zinc-300 rounded focus:ring-primary-500"
                   />
-                  <span className="text-sm text-gray-700">Schemathesis - API fuzzing (requires OpenAPI spec)</span>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium text-zinc-900">Schemathesis</span>
+                    <span className="text-xs text-zinc-500">Advanced API fuzzing (OpenAPI spec recommended)</span>
+                  </div>
                 </label>
               </div>
             </div>
 
             {/* Custom Headers */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-zinc-700 mb-1.5">
                 Custom Headers (JSON)
               </label>
               <textarea
                 value={config.customHeaders}
-                onChange={(e) => updateConfig('customHeaders', e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => updateConfig('customHeaders', e.target.value)}
                 placeholder='{"X-Custom-Header": "value", "X-Another-Header": "value"}'
                 rows={3}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono text-sm"
+                className="w-full px-4 py-2.5 bg-white border border-zinc-200 rounded-md focus:ring-2 focus:ring-primary-100 focus:border-primary-500 outline-none transition-all text-zinc-900 font-mono text-sm"
               />
             </div>
           </div>
         )}
-      </div>
+      </Card>
 
       {/* Info Box */}
-      <div className="bg-industrial-surface/5 border border-industrial-border rounded-industrial p-4 flex items-start space-x-3">
-        <Info className="w-5 h-5 text-industrial-surface flex-shrink-0 mt-0.5" />
-        <div className="text-sm text-industrial-surface">
-          <p className="font-medium">Important</p>
-          <p className="mt-1">
+      <div className="bg-primary-50/50 border border-primary-100 rounded-lg p-5 flex items-start space-x-4">
+        <div className="p-1.5 bg-primary-100 rounded-full flex-shrink-0">
+          <Info className="w-5 h-5 text-primary-700" />
+        </div>
+        <div className="text-sm text-zinc-600">
+          <p className="font-semibold text-zinc-900 mb-1">Authorization Required</p>
+          <p className="leading-relaxed">
             Ensure you have authorization to scan the target. VULX performs active security testing
             that sends requests to the target server. Only scan systems you own or have explicit
             permission to test.
@@ -629,30 +599,20 @@ export const ScanConfig: React.FC = () => {
       </div>
 
       {/* Action Buttons */}
-      <div className="flex items-center justify-end space-x-4">
-        <button
-          onClick={() => navigate(-1)}
-          className="px-6 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-        >
+      <div className="flex items-center justify-end space-x-4 pt-4">
+        <Button variant="ghost" onClick={() => navigate(-1)}>
           Cancel
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="primary"
           onClick={handleStartScan}
           disabled={isStarting || !config.targetUrl}
-          className="px-6 py-2 bg-industrial-action text-white rounded-industrial hover:bg-industrial-action-hover transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+          isLoading={isStarting}
+          leftIcon={!isStarting && <Play className="w-4 h-4" />}
+          size="lg"
         >
-          {isStarting ? (
-            <>
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-              Starting Scan...
-            </>
-          ) : (
-            <>
-              <Play className="w-4 h-4 mr-2" />
-              Start Scan
-            </>
-          )}
-        </button>
+          Start Scan
+        </Button>
       </div>
     </div>
   );

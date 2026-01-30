@@ -1,13 +1,14 @@
-
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
-  Terminal,
-  Maximize2,
-  Minimize2,
+  HelpCircle,
+  Command,
+  Cpu,
+  BarChart3,
   Copy,
   Download,
   Trash2,
-  HelpCircle
+  Minimize2,
+  Maximize2
 } from 'lucide-react';
 
 interface TerminalLine {
@@ -18,8 +19,8 @@ interface TerminalLine {
 }
 
 const HELP_TEXT = `
-VULX Security Scanner CLI
-=========================
+VULX Security Scanner CLI v2.4.0
+================================
 
 Available Commands:
   scan <target>         Start a scan on the specified target
@@ -54,41 +55,41 @@ Examples:
 `;
 
 const EXAMPLE_SCAN_OUTPUT = `
-[*] Starting VULX Security Scan
-[*] Target: https://api.example.com
-[*] Scan Type: standard
-[*] Engines: ZAP, Nuclei
+[*] Starting VULX Security Scan Protocol
+[*] Target Payload: https://api.example.com
+[*] Protocol: REST/OAuth2
+[*] Engines: Titan-v4, Nuclei-SaaS
 
-[+] Initializing scan engines...
-[+] ZAP: Ready
-[+] Nuclei: Ready
+[+] Initializing encrypted sandbox...
+[+] System: Ready
+[+] Network: Online
 
-[*] Phase 1: Discovery
-    [>] Crawling target...
-    [>] Found 24 endpoints
-    [>] Parsing OpenAPI specification...
-    [>] Identified 8 API resources
+[*] Phase 1: Neural Discovery
+    [>] Crawling endpoints...
+    [>] Vector match: 24 nodes found
+    [>] Mapping OpenAPI 3.0.1...
+    [>] Identity validation success
 
-[*] Phase 2: Active Scanning
-    [>] Running Nuclei templates...
-    [>] Running ZAP active scan...
+[*] Phase 2: Autonomous Injection
+    [>] Running Titan-v4 deep packet analysis...
+    [>] Executing cross-vector payloads...
 
-[!] Vulnerabilities Found:
-    [CRITICAL] SQL Injection in /api/users/{id}
-    [HIGH] Broken Authentication at /api/auth/login
-    [MEDIUM] Missing Rate Limiting on /api/users
-    [LOW] Information Disclosure in error responses
+[!] SECURITY BREACH DETECTED:
+    [CRITICAL] SQL-Injection-014 at /api/v1/users/auth
+    [HIGH] Auth-Bypass-992 at /api/v1/internal/admin
+    [MEDIUM] Rate-Limit-Missing at /api/v1/tokens
+    [LOW] Header-Exposure at /static/debug
 
-[*] Phase 3: Generating Report
-    [>] Mapping to OWASP API Top 10
-    [>] Calculating risk score
+[*] Phase 3: Binary Remastering
+    [>] Calculating Risk Quantum...
+    [>] Synchronizing with Dashboard...
 
-[+] Scan Complete!
-    Duration: 12m 34s
-    Findings: 4 (1 Critical, 1 High, 1 Medium, 1 Low)
-    Risk Score: 72/100
+[+] PROTOCOL COMPLETE.
+    Cycle: 12.34s
+    Findings: 4 total
+    Threat Score: 72/100 (HIGH RISK)
 
-Report: https://app.vulx.io/scans/abc123/report
+Report Generated: https://app.vulx.io/scans/abc123/report
 `;
 
 export const CLITerminal: React.FC = () => {
@@ -96,13 +97,19 @@ export const CLITerminal: React.FC = () => {
     {
       id: '1',
       type: 'info',
-      content: 'VULX Security Scanner v1.0.0',
+      content: 'VULX SECURITY OPERATING SYSTEM [Version 2.4.0]',
       timestamp: new Date()
     },
     {
       id: '2',
       type: 'info',
-      content: 'Type "help" for available commands',
+      content: '(c) 2026 VULX Corporation. All rights reserved.',
+      timestamp: new Date()
+    },
+    {
+      id: '3',
+      type: 'info',
+      content: 'Type "help" to list available commands.',
       timestamp: new Date()
     }
   ]);
@@ -115,14 +122,12 @@ export const CLITerminal: React.FC = () => {
   const terminalRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Auto-scroll to bottom
   useEffect(() => {
     if (terminalRef.current) {
       terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
     }
   }, [lines]);
 
-  // Focus input on click
   const handleTerminalClick = () => {
     inputRef.current?.focus();
   };
@@ -139,8 +144,8 @@ export const CLITerminal: React.FC = () => {
   const simulateScan = useCallback(async (args: string[]) => {
     const target = args[0];
     if (!target) {
-      addLine('error', 'Error: Target URL required');
-      addLine('info', 'Usage: scan <target-url> [options]');
+      addLine('error', 'SYSERR: Target endpoint required');
+      addLine('info', 'USAGE: scan <target> [--type quick|full]');
       return;
     }
 
@@ -148,7 +153,7 @@ export const CLITerminal: React.FC = () => {
     const outputLines = EXAMPLE_SCAN_OUTPUT.trim().split('\n');
 
     for (const line of outputLines) {
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 80));
 
       let type: TerminalLine['type'] = 'output';
       if (line.startsWith('[!]') || line.includes('[CRITICAL]') || line.includes('[HIGH]')) {
@@ -170,6 +175,8 @@ export const CLITerminal: React.FC = () => {
 
     switch (command) {
       case 'help':
+        addLine('output', 'Fetching Documentation Package...');
+        await new Promise(r => setTimeout(r, 400));
         HELP_TEXT.split('\n').forEach(line => addLine('output', line));
         break;
 
@@ -178,8 +185,8 @@ export const CLITerminal: React.FC = () => {
         break;
 
       case 'version':
-        addLine('output', 'VULX Security Scanner v1.0.0');
-        addLine('output', 'Engines: ZAP 2.14.0, Nuclei 3.1.0, Schemathesis 3.21.0');
+        addLine('output', 'VULX Terminal Kernel: 2.4.0-stable');
+        addLine('output', 'Core Engines: Titan-v4 (Proprietary), Nuclei-3.1, Schemathesis-3.21');
         break;
 
       case 'scan':
@@ -190,61 +197,30 @@ export const CLITerminal: React.FC = () => {
 
       case 'projects':
         addLine('output', '');
-        addLine('output', 'ID                                    NAME               SCANS   LAST SCAN');
-        addLine('output', '─────────────────────────────────────────────────────────────────────────');
-        addLine('output', 'proj_1234567890                       My API             12      2 hours ago');
-        addLine('output', 'proj_0987654321                       Payment Service    5       1 day ago');
-        addLine('output', 'proj_abcdef1234                       User API           8       3 days ago');
+        addLine('output', 'NAMESPACE                             NODES   LAST UPDATE');
+        addLine('output', '─────────────────────────────────────────────────────────────');
+        addLine('output', 'vulx-infra-internal                   12      01/28/2026');
+        addLine('output', 'nexus-core-prod                       5       01/27/2026');
         addLine('output', '');
         break;
 
       case 'scans':
         addLine('output', '');
-        addLine('output', 'ID            STATUS      TYPE        FINDINGS    STARTED');
-        addLine('output', '────────────────────────────────────────────────────────────');
-        addLine('output', 'scan_abc123   COMPLETED   standard    4           2h ago');
-        addLine('output', 'scan_def456   COMPLETED   quick       1           1d ago');
-        addLine('output', 'scan_ghi789   FAILED      full        -           2d ago');
-        addLine('output', '');
-        break;
-
-      case 'auth':
-        addLine('output', '');
-        addLine('output', 'Supported Authentication Methods:');
-        addLine('output', '');
-        addLine('output', '  bearer    - Bearer token authentication');
-        addLine('output', '             --token <jwt-token>');
-        addLine('output', '');
-        addLine('output', '  basic     - Basic HTTP authentication');
-        addLine('output', '             --username <user> --password <pass>');
-        addLine('output', '');
-        addLine('output', '  apikey    - API Key authentication');
-        addLine('output', '             --header <header-name> --token <api-key>');
-        addLine('output', '');
-        addLine('output', '  oauth2    - OAuth2 client credentials');
-        addLine('output', '             --client-id <id> --client-secret <secret>');
-        addLine('output', '             --token-url <url> --scope <scope>');
-        addLine('output', '');
-        break;
-
-      case 'config':
-        addLine('output', '');
-        addLine('output', 'Current Configuration:');
-        addLine('output', '  API URL:     https://api.vulx.io');
-        addLine('output', '  API Key:     ****...****');
-        addLine('output', '  Default Org: org_1234567890');
+        addLine('output', 'HASH          STATUS      FINDINGS    DURATION');
+        addLine('output', '──────────────────────────────────────────────');
+        addLine('output', '0xabc123      COMPLETED   4           12.3s');
+        addLine('output', '0xdef456      COMPLETED   1           4.1s');
         addLine('output', '');
         break;
 
       case 'report':
         if (!args[0]) {
-          addLine('error', 'Error: Scan ID required');
-          addLine('info', 'Usage: report <scan-id> [--format pdf|json|html] [--framework soc2|pci_dss|hipaa|gdpr]');
+          addLine('error', 'SYSERR: Scan hash required');
         } else {
-          addLine('info', `Generating report for scan ${args[0]}...`);
-          await new Promise(resolve => setTimeout(resolve, 1500));
-          addLine('success', 'Report generated successfully!');
-          addLine('output', `Download: https://app.vulx.io/reports/${args[0]}.pdf`);
+          addLine('info', `Initializing Report Generation for ${args[0]}...`);
+          await new Promise(resolve => setTimeout(resolve, 1200));
+          addLine('success', 'Report Matrix Synthesized Successfully.');
+          addLine('output', `Vector URL: https://app.vulx.io/reports/${args[0]}.pdf`);
         }
         break;
 
@@ -252,8 +228,8 @@ export const CLITerminal: React.FC = () => {
         break;
 
       default:
-        addLine('error', `Command not found: ${command}`);
-        addLine('info', 'Type "help" for available commands');
+        addLine('error', `SYSERR: Command [${command}] not recognized in current context.`);
+        addLine('info', 'Input "help" for command matrix.');
     }
   }, [addLine, simulateScan]);
 
@@ -262,7 +238,7 @@ export const CLITerminal: React.FC = () => {
     if (!input.trim() || isProcessing) return;
 
     const cmd = input.trim();
-    addLine('input', `$ vulx ${cmd}`);
+    addLine('input', `> ${cmd}`);
     setHistory(prev => [...prev, cmd]);
     setHistoryIndex(-1);
     setInput('');
@@ -302,116 +278,138 @@ export const CLITerminal: React.FC = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'vulx-terminal-output.txt';
+    a.download = 'vulx-terminal-session.log';
     a.click();
     URL.revokeObjectURL(url);
   };
 
   const getLineColor = (type: TerminalLine['type']) => {
     switch (type) {
-      case 'input': return 'text-industrial-base';
-      case 'output': return 'text-gray-300';
-      case 'error': return 'text-severity-critical';
-      case 'success': return 'text-severity-success';
-      case 'info': return 'text-severity-medium';
-      default: return 'text-gray-300';
+      case 'input': return 'text-primary-400 font-black';
+      case 'output': return 'text-zinc-400 font-medium';
+      case 'error': return 'text-red-500 font-bold';
+      case 'success': return 'text-emerald-500 font-bold';
+      case 'info': return 'text-primary-300 font-bold';
+      default: return 'text-zinc-500';
     }
   };
 
   return (
-    <div className={`flex flex-col ${isFullscreen ? 'fixed inset-0 z-50' : 'h-[600px]'}`}>
-      {/* Header */}
-      <div className="bg-industrial-surface-hover px-4 py-2 flex items-center justify-between rounded-t-lg border-b border-black/20">
-        <div className="flex items-center space-x-3">
+    <div className={`flex flex-col animate-fade-in ${isFullscreen ? 'fixed inset-0 z-50 bg-zinc-950 p-6' : 'h-[720px] shadow-2xl rounded-3xl overflow-hidden'}`}>
+      {/* Chrome */}
+      <div className="bg-zinc-900 px-6 py-4 flex items-center justify-between border-b border-zinc-800">
+        <div className="flex items-center space-x-4">
           <div className="flex space-x-2">
-            <div className="w-3 h-3 rounded-full bg-severity-critical" />
-            <div className="w-3 h-3 rounded-full bg-severity-high" />
-            <div className="w-3 h-3 rounded-full bg-severity-success" />
+            <div className="w-3 h-3 rounded-full bg-zinc-700" />
+            <div className="w-3 h-3 rounded-full bg-zinc-700" />
+            <div className="w-3 h-3 rounded-full bg-zinc-700" />
           </div>
-          <div className="flex items-center space-x-2 text-gray-400">
-            <Terminal className="w-4 h-4" />
-            <span className="text-sm font-medium">VULX Terminal</span>
+          <div className="h-4 w-px bg-zinc-800" />
+          <div className="flex items-center space-x-2 text-zinc-400">
+            <Command className="w-4 h-4 text-primary-500" />
+            <span className="text-[11px] font-black uppercase tracking-[0.2em]">VULX.CORE.SYS</span>
           </div>
         </div>
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={copyToClipboard}
-            className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded"
-            title="Copy output"
-          >
-            <Copy className="w-4 h-4" />
-          </button>
-          <button
-            onClick={downloadOutput}
-            className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded"
-            title="Download output"
-          >
-            <Download className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => setLines([])}
-            className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded"
-            title="Clear terminal"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
+
+        <div className="flex items-center space-x-1.5">
+          {[
+            { icon: Copy, fn: copyToClipboard, label: 'Sync' },
+            { icon: Download, fn: downloadOutput, label: 'Logs' },
+            { icon: Trash2, fn: () => setLines([]), label: 'Purge' }
+          ].map((action, i) => (
+            <button
+              key={i}
+              onClick={action.fn}
+              className="px-3 py-1.5 text-[10px] font-black text-zinc-500 hover:text-white hover:bg-white/5 rounded-xl transition-all uppercase tracking-widest flex items-center gap-2"
+            >
+              <action.icon className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">{action.label}</span>
+            </button>
+          ))}
+          <div className="h-4 w-px bg-zinc-800 mx-2" />
           <button
             onClick={() => setIsFullscreen(!isFullscreen)}
-            className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded"
-            title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
+            className="p-2 text-zinc-500 hover:text-white hover:bg-white/5 rounded-xl transition-all"
           >
             {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
           </button>
         </div>
       </div>
 
-      {/* Terminal Body */}
+      {/* Terminal Viewport */}
       <div
         ref={terminalRef}
         onClick={handleTerminalClick}
-        className={`flex-1 bg-industrial-surface p-4 overflow-y-auto font-mono text-sm ${isFullscreen ? '' : 'rounded-b-lg'
-          }`}
-        style={{ minHeight: '400px' }}
+        className="flex-1 bg-zinc-950 p-8 overflow-y-auto font-mono text-sm leading-relaxed relative"
       >
-        {lines.map((line) => (
-          <div key={line.id} className={`${getLineColor(line.type)} whitespace-pre-wrap`}>
-            {line.content}
-          </div>
-        ))}
+        {/* Decorative Grid Overlay */}
+        <div className="absolute inset-0 opacity-[0.02] pointer-events-none" style={{
+          backgroundImage: `linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)`,
+          backgroundSize: '30px 30px'
+        }} />
 
-        {/* Input Line */}
-        <form onSubmit={handleSubmit} className="flex items-center mt-1">
-          <span className="text-green-400">$ vulx </span>
-          <input
-            ref={inputRef}
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            disabled={isProcessing}
-            className="flex-1 bg-transparent text-gray-300 outline-none ml-1"
-            placeholder={isProcessing ? 'Processing...' : ''}
-            autoFocus
-          />
-          {isProcessing && (
-            <div className="w-4 h-4 border-2 border-green-400 border-t-transparent rounded-full animate-spin ml-2" />
-          )}
-        </form>
+        <div className="relative z-10 space-y-1">
+          {lines.map((line) => (
+            <div key={line.id} className={`${getLineColor(line.type)} whitespace-pre-wrap flex gap-3`}>
+              <span className="text-zinc-800 select-none opacity-50 shrink-0">[{line.timestamp.toLocaleTimeString([], { hour12: false })}]</span>
+              <span className="flex-1">{line.content}</span>
+            </div>
+          ))}
+
+          {/* Prompt */}
+          <form onSubmit={handleSubmit} className="flex items-center gap-3 mt-4 group">
+            <span className="text-zinc-800 select-none opacity-50 shrink-0">[{new Date().toLocaleTimeString([], { hour12: false })}]</span>
+            <span className="text-emerald-500 font-black animate-pulse">{'>'}</span>
+            <input
+              ref={inputRef}
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              disabled={isProcessing}
+              className="flex-1 bg-transparent text-white outline-none font-bold placeholder:text-zinc-800"
+              placeholder={isProcessing ? 'ENGINE BUSY...' : 'TYPE COMMAND...'}
+              autoFocus
+            />
+            {isProcessing && (
+              <Cpu className="w-4 h-4 text-emerald-500 animate-spin mr-2" />
+            )}
+          </form>
+        </div>
       </div>
 
-      {/* Help Bar */}
-      <div className="bg-gray-800 px-4 py-2 flex items-center justify-between text-xs text-gray-400 rounded-b-lg border-t border-gray-700">
-        <div className="flex items-center space-x-4">
-          <span>Press <kbd className="px-1 py-0.5 bg-gray-700 rounded">Enter</kbd> to execute</span>
-          <span><kbd className="px-1 py-0.5 bg-gray-700 rounded">↑</kbd> / <kbd className="px-1 py-0.5 bg-gray-700 rounded">↓</kbd> for history</span>
+      {/* Footer Info Hub */}
+      <div className="bg-zinc-900 px-6 py-3 flex items-center justify-between border-t border-zinc-800">
+        <div className="flex items-center space-x-6">
+          <div className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
+            <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Linked: US-EAST-1</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <BarChart3 className="w-3 h-3 text-zinc-600" />
+            <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Matrix: Active</span>
+          </div>
         </div>
-        <button
-          onClick={() => processCommand('help')}
-          className="flex items-center space-x-1 hover:text-white"
-        >
-          <HelpCircle className="w-3 h-3" />
-          <span>Help</span>
-        </button>
+
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 text-zinc-600">
+            <div className="flex gap-1">
+              <kbd className="px-1.5 py-0.5 bg-zinc-800 rounded border border-zinc-700 text-[9px] font-black">ENT</kbd>
+              <span className="text-[9px] font-black uppercase tracking-widest">Execute</span>
+            </div>
+            <div className="flex gap-1">
+              <kbd className="px-1.5 py-0.5 bg-zinc-800 rounded border border-zinc-700 text-[9px] font-black">TAB</kbd>
+              <span className="text-[9px] font-black uppercase tracking-widest">Auth</span>
+            </div>
+          </div>
+          <button
+            onClick={() => processCommand('help')}
+            className="flex items-center gap-2 px-3 py-1 bg-primary-500/10 border border-primary-500/20 rounded-lg text-primary-400 hover:bg-primary-500/20 transition-all text-[10px] font-black uppercase tracking-widest"
+          >
+            <HelpCircle className="w-3 h-3" />
+            <span>Doc Matrix</span>
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -11,13 +11,16 @@
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.1.18",
+    "@types/styled-components": "^5.1.36",
     "axios": "^1.13.3",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "driver.js": "^1.4.0",
     "lucide-react": "^0.563.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.13.0",
+    "styled-components": "^6.3.8",
     "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {
